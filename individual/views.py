@@ -2,9 +2,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from django.contrib.auth.models import User
-from .models import UserProfile
-from .serializers import UserProfileSerializer
+from authentication.models import User
+from .models import UserProfile, UpdateProfilePic, ShareProfile, Receivedprofile
+from .serializers import UserProfileSerializer, UpdateProfilePicSerializer, ShareProfileSerializer, ReceivedprofileSerializer
+from .utils import encrypt_data, decrypt_data
 
 
 @api_view(['GET', 'POST'])
@@ -16,17 +17,22 @@ def user_profile_list(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        print(request.data)
+
         serializer = UserProfileSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticatedOrReadOnly])  # Only authenticated users can modify
 def user_profile_detail(request, pk):
     try:
-        profile = UserProfile.objects.get(pk=pk)
+        profile = UserProfile.objects.get(user=pk)
     except UserProfile.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -48,3 +54,111 @@ def user_profile_detail(request, pk):
     elif request.method == 'DELETE':
         profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_profile_pic(request):
+    try:
+        profile_pic_instance = UpdateProfilePic.objects.get(user=request.user)
+    except UpdateProfilePic.DoesNotExist:
+        profile_pic_instance = None
+
+    if request.method == 'POST':
+        if profile_pic_instance:
+            serializer = UpdateProfilePicSerializer(profile_pic_instance, data=request.data)
+        else:
+            serializer = UpdateProfilePicSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def nfc_write(request):
+    try:
+        profile_data = request.data
+        if not profile_data:
+            return Response({'error': 'Profile data is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        encrypted_data = encrypt_data(profile_data)
+        print("Encrypted Data:", encrypted_data)
+        print("Decrypted Data:", decrypt_data(encrypted_data))
+        return Response({'encrypted_data': encrypted_data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def nfc_read(request):
+    try:
+        encrypted_data = request.data.get('encrypted_data')
+        print("Received Encrypted Data:", encrypted_data)
+        if not encrypted_data:
+            return Response({'error': 'Encrypted text is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        decrypted_data = decrypt_data(encrypted_data)
+        print("Decrypted Data:", decrypted_data)
+        return Response(decrypted_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print("Error:", str(e))
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+
+@api_view(['POST', 'GET'])
+@permission_classes([IsAuthenticated])
+def share_profile(request):
+    user = request.user
+    
+    if request.method == 'POST':
+        shared_to_username = request.data.get('shared_to')
+
+        try:
+            shared_to_user = User.objects.get(username=shared_to_username)
+        except User.DoesNotExist:
+            return Response({'error': 'User to share with does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create ShareProfile entry
+        share_profile_data = {
+            'user': user.id,
+            'shared_to': shared_to_user.id
+        }
+        print(share_profile_data)
+        share_profile_serializer = ShareProfileSerializer(data=share_profile_data)
+        if share_profile_serializer.is_valid():
+            share_profile_serializer.save()
+        else:
+            return Response(share_profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create Receivedprofile entry
+        received_profile_data = {
+            'user': shared_to_user.id,
+            'shared_from': user.id
+        }
+        print(received_profile_data)
+        received_profile_serializer = ReceivedprofileSerializer(data=received_profile_data)
+        if received_profile_serializer.is_valid():
+            received_profile_serializer.save()
+        else:
+            return Response(received_profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'Profile shared successfully'}, status=status.HTTP_201_CREATED)
+    
+    elif request.method == 'GET':
+        user = request.user
+        try:   
+            received_profiles = Receivedprofile.objects.filter(user=user)
+            serializer = ReceivedprofileSerializer(received_profiles, many=True)
+            print("Serializer data:", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error fetching received cards:", str(e))  # Debugging line
+            return Response({"error": "Error fetching received cards"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

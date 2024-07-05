@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "analytics",
+    "company",
     "individual",
     "corsheaders",
     "djoser",
@@ -109,6 +111,8 @@ DJOSER = {
     'LOGIN_FIELD': "email",
     'SERIALIZERS': {
         'user_create': 'authentication.serializers.CustomUserCreateSerializer',
+        'user': 'authentication.serializers.CustomUserSerializer',
+        'current_user': 'authentication.serializers.CustomUserSerializer', 
     },
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}/',
     'SEND_ACTIVATION_EMAIL': True,
