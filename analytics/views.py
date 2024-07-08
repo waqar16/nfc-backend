@@ -74,6 +74,7 @@ def geo_data_view(request):
 
     return Response(data)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def sharing_networking_view(request):

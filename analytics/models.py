@@ -6,7 +6,7 @@ class Interaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     location = models.CharField(max_length=255)
-    interaction_type = models.CharField(max_length=50)  # e.g., 'tap', 'share'
+    interaction_type = models.CharField(max_length=50)
 
 
 class Contact(models.Model):
