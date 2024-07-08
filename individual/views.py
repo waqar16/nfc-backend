@@ -2,11 +2,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from authentication.models import User
 from .models import UserProfile, UpdateProfilePic, ShareProfile, Receivedprofile
 from .serializers import UserProfileSerializer, UpdateProfilePicSerializer, ShareProfileSerializer, ReceivedprofileSerializer
 from .utils import encrypt_data, decrypt_data
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
