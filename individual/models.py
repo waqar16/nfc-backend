@@ -14,12 +14,18 @@ class UserProfile(models.Model):
     bio = models.TextField(blank=True, null=True)
     facebook = models.URLField(blank=True, null=True)
     instagram = models.URLField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
-
-
-class UpdateProfilePic(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    github = models.URLField(blank=True, null=True)
+    whatsapp = models.IntegerField(blank=True, null=True)
     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+
+
+
+# class UpdateProfilePic(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+
 
 
 class ShareProfile(models.Model):

@@ -2,8 +2,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from .models import UserProfile, UpdateProfilePic, ShareProfile, Receivedprofile
-from .serializers import UserProfileSerializer, UpdateProfilePicSerializer, ShareProfileSerializer, ReceivedprofileSerializer
+from .models import UserProfile, Receivedprofile
+from .serializers import UserProfileSerializer, ShareProfileSerializer, ReceivedprofileSerializer
 from .utils import encrypt_data, decrypt_data
 from django.contrib.auth import get_user_model
 
@@ -13,7 +13,11 @@ User = get_user_model()
 @permission_classes([IsAuthenticated])
 def user_profile_list(request):
     if request.method == 'GET':
-        profiles = UserProfile.objects.filter(user=request.user)
+        if request.user.is_superuser:
+            profiles = UserProfile.objects.all()  # Super admin can access all profiles
+        else:
+            profiles = UserProfile.objects.filter(user=request.user)  # Other users can only access their own profile
+        
         serializer = UserProfileSerializer(profiles, many=True)
         return Response(serializer.data)
 
@@ -27,6 +31,15 @@ def user_profile_list(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        user = request.user
+        try:
+            profile = UserProfile.objects.get(user=user)
+            profile.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'Profile does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -57,27 +70,27 @@ def user_profile_detail(request, pk):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def update_profile_pic(request):
-    try:
-        profile_pic_instance = UpdateProfilePic.objects.get(user=request.user)
-    except UpdateProfilePic.DoesNotExist:
-        profile_pic_instance = None
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def update_profile_pic(request):
+#     try:
+#         profile_pic_instance = UpdateProfilePic.objects.get(user=request.user)
+#     except UpdateProfilePic.DoesNotExist:
+#         profile_pic_instance = None
 
-    if request.method == 'POST':
-        if profile_pic_instance:
-            serializer = UpdateProfilePicSerializer(profile_pic_instance, data=request.data)
-        else:
-            serializer = UpdateProfilePicSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     if request.method == 'POST':
+#         if profile_pic_instance:
+#             serializer = UpdateProfilePicSerializer(profile_pic_instance, data=request.data)
+#         else:
+#             serializer = UpdateProfilePicSerializer(data=request.data)
+#             serializer.is_valid(raise_exception=True)
+#             serializer.save(user=request.user)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['POST'])
