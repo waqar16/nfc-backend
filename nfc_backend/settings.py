@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
-
 # Application definition
 
 INSTALLED_APPS = [

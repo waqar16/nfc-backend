@@ -1,35 +1,13 @@
 from rest_framework import status
 from rest_framework.views import APIView
-# from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-# from .models import Profile
 from .serializers import CustomUserCreateSerializer
-# from djoser.views import UserCreateView
+
 
 User = get_user_model()
 
-
-# @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
-# def profile_type(request):
-#     if request.method == 'GET':
-#         profiles = Profile.objects.filter(user=request.user)
-#         serializer = ProfileSerializer(profiles, many=True)
-#         return Response(serializer.data)
-
-#     elif request.method == 'POST':
-#         serializer = ProfileSerializer(data=request.data)
-#         data = {
-#             'user': request.user,
-#             'profile_type': request.data.get('profile_type')
-#         }
-#         print(data)
-#         if serializer.is_valid():
-#             serializer.save(user=request.user)
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class CustomUserCreateView(APIView):
     def post(self, request):
