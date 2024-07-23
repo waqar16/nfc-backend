@@ -1,3 +1,6 @@
+import json
+from django.db import IntegrityError
+import jwt
 from rest_framework import status
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
@@ -6,16 +9,120 @@ from rest_framework.response import Response
 from .serializers import CustomUserCreateSerializer
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+from rest_framework.authtoken.models import Token
 
 
-class GoogleLogin(SocialLoginView):
-    adapter_class = GoogleOAuth2Adapter
+# class GoogleLogin(SocialLoginView):
+#     adapter_class = GoogleOAuth2Adapter
+
+
+# class CustomGoogleLogin(View):
+#     @method_decorator(csrf_exempt)
+#     def dispatch(self, *args, **kwargs):
+#         return super().dispatch(*args, **kwargs)
+
+#     def post(self, request, *args, **kwargs):
+#         body = json.loads(request.body)
+#         token = body.get('access_token')
+
+#         if not token:
+#             return JsonResponse({'error': 'Token not provided'}, status=400)
+
+#         try:
+#             # Decode the JWT token
+#             decoded_token = jwt.decode(token, options={"verify_signature": False})
+#             email = decoded_token.get('email')
+#             name = decoded_token.get('name')
+#             first_name, last_name = name.split(' ', 1)
+
+#             if not email:
+#                 return JsonResponse({'error': 'Failed to retrieve email from token'}, status=400)
+
+#             # Check if user exists
+#             user, created = User.objects.get_or_create(username=email, defaults={
+#                 'email': email,
+#                 'first_name': first_name,
+#                 'last_name': last_name,
+#                 'profile_type': 'individual',
+#             })
+
+#             # If user is created, set a usable password or any other default settings
+#             if created:
+#                 user.set_unusable_password()
+#                 user.save()
+
+#             # Simulate login by returning user information (you might want to set a session or token)
+#             return JsonResponse({'message': 'Login successful', 'user_id': user.id, 'username': user.username, 'email': user.email, 'profile_type': user.profile_type})
+
+#         except jwt.PyJWTError as e:
+#             return JsonResponse({'error': 'Invalid token', 'details': str(e)}, status=400)
 
 
 User = get_user_model()
 
+class CustomGoogleLogin(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        body = json.loads(request.body)
+        token = body.get('access_token')
+        profile_type = body.get('profile_type')
+
+        if not token:
+            return JsonResponse({'error': 'Token not provided'}, status=400)
+
+        if profile_type not in ['individual', 'employee', 'company']:
+            return JsonResponse({'error': 'Invalid profile type'}, status=400)
+
+        try:
+            # Decode the JWT token
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            email = decoded_token.get('email')
+            name = decoded_token.get('name')
+            first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
+
+            if not email:
+                return JsonResponse({'error': 'Failed to retrieve email from token'}, status=400)
+
+            username = decoded_token.get('preferred_username', email)
+
+            # Check if user exists
+            user, created = User.objects.get_or_create(username=username, defaults={
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'profile_type': profile_type
+            })
+
+            if created:
+                user.set_unusable_password()
+                user.save()
+            else:
+                # Update profile_type if user already exists
+                user.profile_type = profile_type
+                user.save()
+
+            # Generate or retrieve auth token
+            token, created = Token.objects.get_or_create(user=user)
+
+            return JsonResponse({
+                'message': 'Login successful',
+                'user_id': user.id,
+                'username': user.username,
+                'auth_token': token.key,
+                'profile_type': user.profile_type
+            })
+
+        except jwt.PyJWTError as e:
+            return JsonResponse({'error': 'Invalid token', 'details': str(e)}, status=400)
     
+
 class CustomUserCreateView(APIView):
     def post(self, request):
         serializer = CustomUserCreateSerializer(data=request.data)

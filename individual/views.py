@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -70,28 +71,19 @@ def user_profile_detail(request, pk):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def update_profile_pic(request):
-#     try:
-#         profile_pic_instance = UpdateProfilePic.objects.get(user=request.user)
-#     except UpdateProfilePic.DoesNotExist:
-#         profile_pic_instance = None
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def share_profile_url(request):
+    user = request.user
+    try:
+        profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-#     if request.method == 'POST':
-#         if profile_pic_instance:
-#             serializer = UpdateProfilePicSerializer(profile_pic_instance, data=request.data)
-#         else:
-#             serializer = UpdateProfilePicSerializer(data=request.data)
-#             serializer.is_valid(raise_exception=True)
-#             serializer.save(user=request.user)
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # Construct the URL to be shared
+    profile_url = f'http://localhost:3000/profile/{user.id}'
+    return Response({'profile_url': profile_url}, status=status.HTTP_200_OK)
 
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -133,10 +125,10 @@ def share_profile(request):
     user = request.user
     
     if request.method == 'POST':
-        shared_to_username = request.data.get('shared_to')
+        shared_to_email = request.data.get('shared_to')
 
         try:
-            shared_to_user = User.objects.get(username=shared_to_username)
+            shared_to_user = User.objects.get(email=shared_to_email)
         except User.DoesNotExist:
             return Response({'error': 'User to share with does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
