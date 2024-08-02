@@ -19,8 +19,7 @@ class UserProfile(models.Model):
     linkedin = models.URLField(blank=True, null=True)
     github = models.URLField(blank=True, null=True)
     whatsapp = models.IntegerField(blank=True, null=True)
-    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-
+    profile_pic = models.URLField(blank=True, null=True)
 
 
 # class UpdateProfilePic(models.Model):

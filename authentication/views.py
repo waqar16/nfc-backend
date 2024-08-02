@@ -39,6 +39,7 @@ class CustomGoogleLogin(View):
             email = decoded_token.get('email')
             name = decoded_token.get('name')
             first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
+            picture = decoded_token.get('picture')
 
             if not email:
                 return JsonResponse({'error': 'Failed to retrieve email from token'}, status=400)
@@ -74,6 +75,7 @@ class CustomGoogleLogin(View):
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
+                'profile_pic': picture
             })
 
         except jwt.PyJWTError as e:
