@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
@@ -113,7 +113,7 @@ def complete_registration(request, token, email, first_name, last_name):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def employee_detail(request, email):
     try:
         employee = Employee.objects.get(email=email)

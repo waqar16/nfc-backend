@@ -59,9 +59,18 @@ INSTALLED_APPS = [
 
 ]
 
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Update this path to the correct location of your JSON file
+CREDENTIALS = os.path.join(BASE_DIR, 'nfc_backend', 'client_secret.json')
+
+GOOGLE_CLIENT_ID = '1036461909018-v32f9s35hefkbeq70gterh12sioug5a5.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = 'v61-By3jx9FWsMdoBwpjAxwg'
+# GOOGLE_REDIRECT_URI = 'http://localhost:3000/rest/v1/calendar/redirect/'
+GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/google/callback/'
 
 
-
+# Google API configuration
 
 SITE_ID = 1
 
@@ -97,12 +106,14 @@ SOCIALACCOUNT_PROVIDERS = {
 
 
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # If you want to allow specific origins, use this instead:
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000"
+# ]
+
+IPINFO_TOKEN = '4d0c535756e617'
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

@@ -12,7 +12,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path('interactions/', create_interaction, name='create_interaction'),
+    path('create_interaction/', create_interaction, name='create_interaction'),
     path('contacts/', create_contact, name='create_contact'),
     path('interaction-frequency/<str:period>/', interaction_frequency_view, name='interaction-frequency'),
     path('peak-interaction-time/', peak_interaction_time_view, name='peak-interaction-time'),

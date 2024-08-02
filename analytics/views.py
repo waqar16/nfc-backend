@@ -7,19 +7,32 @@ from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
+from .utils import fetch_country_from_ip, get_public_ip
+from rest_framework.pagination import PageNumberPagination
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def create_interaction(request):
-    user = request.user
     data = request.data
-    data['user'] = user.id
+    ip_address = get_public_ip()
+    country = fetch_country_from_ip(ip_address)
+    # Set the location using a placeholder or user's IP address
+    data['location'] = country
     serializer = InteractionSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    print(serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['POST'])
@@ -50,7 +63,23 @@ def interaction_frequency_view(request, period):
         return Response({"error": "Invalid period"}, status=400)
 
     interactions = Interaction.objects.filter(user=user, timestamp__gte=start_date)
-    data = interactions.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
+
+    if period == 'daily':
+        data = interactions.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
+    
+    elif period == 'weekly':
+        # Generate data for each of the last 7 days
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=7)
+        data = interactions.filter(timestamp__range=[start_date, end_date])
+        data = data.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
+    
+    elif period == 'monthly':
+        # Generate data for each of the last 30 days
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=30)
+        data = interactions.filter(timestamp__range=[start_date, end_date])
+        data = data.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
 
     return Response(data)
 

@@ -10,6 +10,7 @@ class UserProfile(models.Model):
     last_name = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
+    position = models.CharField(max_length=255, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     facebook = models.URLField(blank=True, null=True)
