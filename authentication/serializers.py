@@ -10,10 +10,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     company_name = serializers.CharField(max_length=100, required=False)
     admin_name = serializers.CharField(max_length=100, required=False)
     profile_type = serializers.ChoiceField(choices=[('individual', 'Individual'), ('employee', 'Employee'), ('company', 'Company')])
+    authentication_type = serializers.ChoiceField(choices=[('manual', 'Manual'), ('google', 'Google')])
 
     class Meta(UserCreateSerializer.Meta):
         model = CustomUser
-        fields = ('first_name', 'last_name', 'email', 'username', 'password', 'company_name', 'admin_name', 'profile_type')
+        fields = ('first_name', 'last_name', 'email', 'username', 'password', 'company_name', 'admin_name', 'profile_type', 'authentication_type')
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -24,4 +25,4 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class CustomUserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'company_name', 'admin_name', 'profile_type')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'company_name', 'admin_name', 'profile_type', 'authentication_type')

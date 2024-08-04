@@ -59,7 +59,7 @@ class CustomGoogleLogin(View):
                 #     user.save()
             else:
                 # Create a new user if none exists
-                user = User.objects.create(username=username, email=email, first_name=first_name, last_name=last_name, profile_type=profile_type)
+                user = User.objects.create(username=username, email=email, first_name=first_name, last_name=last_name, profile_type=profile_type, authentication_type='google')
                 user.set_unusable_password()
                 user.save()
 
@@ -75,7 +75,8 @@ class CustomGoogleLogin(View):
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'profile_pic': picture
+                'profile_pic': picture,
+                'authentication_type': user.authentication_type
             })
 
         except jwt.PyJWTError as e:
@@ -88,10 +89,9 @@ class DeleteGoogleAccountView(APIView):
 
     def delete(self, request):
         user = request.user
-        # temporary left this commented will change this later for security purpose 
         
-        # if user.authentication_type != 'google':
-        #     return JsonResponse({'error': 'Invalid request'}, status=400)
+        if user.authentication_type != 'google':
+            return JsonResponse({'error': 'Invalid request'}, status=400)
 
         user.delete()
         return JsonResponse({'message': 'Account deleted successfully'}, status=204)

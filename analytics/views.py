@@ -14,18 +14,47 @@ import calendar
 
 
 
+# @api_view(['POST'])
+# # @permission_classes([IsAuthenticated])
+# def create_interaction(request):
+#     data = request.data
+#     ip_address = get_public_ip()
+#     country = fetch_country_from_ip(ip_address)
+#     # Set the location using a placeholder or user's IP address
+#     data['location'] = country
+#     serializer = InteractionSerializer(data=data)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     print(serializer.errors)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 def create_interaction(request):
     data = request.data
-    ip_address = get_public_ip()
+    
+    # Extract user's IP address from the request
+    ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
+    if ip_address:
+        ip_address = ip_address.split(',')[0]
+    else:
+        ip_address = request.META.get('REMOTE_ADDR')
+
+    # Extracted IP address for debugging purposes
+    print(f"Extracted IP address: {ip_address}")
+    
+    # Fetch country information based on the user's IP address
     country = fetch_country_from_ip(ip_address)
-    # Set the location using a placeholder or user's IP address
+    
+    # Set the location using the user's IP address
     data['location'] = country
+    
     serializer = InteractionSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     print(serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
