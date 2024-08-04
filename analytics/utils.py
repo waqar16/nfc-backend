@@ -14,7 +14,7 @@ def get_public_ip():
 
 def fetch_country_from_ip(ip_address):
     try:
-        response = requests.get(f"https://api.country.is/{ip_address}")
+        response = requests.get(f"https://ipapi.co/{ip_address}/json")
         response.raise_for_status()
         data = response.json()
         return data.get("country", "Unknown")
