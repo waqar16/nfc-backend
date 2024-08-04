@@ -8,13 +8,9 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
 from .utils import fetch_country_from_ip, get_public_ip
-from rest_framework.pagination import PageNumberPagination
-
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncHour
+from django.db.models import F
+import calendar
 
 
 
@@ -47,51 +43,133 @@ def create_contact(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_contact(request):
+    user = request.user
+    data = request.data
+    data['user'] = user.id
+    serializer = ContactSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def interaction_frequency_view(request, period):
     user = request.user
 
+    # Determine the start date and truncation function based on the period
     if period == 'daily':
-        start_date = timezone.now() - timedelta(days=1)
-    elif period == 'weekly':
         start_date = timezone.now() - timedelta(days=7)
+        trunc_func = TruncHour
+        period_format = '%H'  # Hour format
+    elif period == 'weekly':
+        start_date = timezone.now() - timedelta(weeks=1)  # Cover the last 7 days
+        trunc_func = TruncDay
+        period_format = '%A'  # Day of the week
     elif period == 'monthly':
-        start_date = timezone.now() - timedelta(days=30)
+        start_date = timezone.now() - timedelta(days=365)  # Cover the last 12 months
+        trunc_func = TruncMonth
+        period_format = '%b'  # Abbreviated month format
+    else:
+        return Response({"error": "Invalid period"}, status=400)
+
+    # Filter interactions based on the user and the start date
+    interactions = Interaction.objects.filter(user=user, timestamp__gte=start_date)
+
+    # Annotate interactions with the appropriate period
+    data = interactions.annotate(
+        period_name=trunc_func('timestamp')
+    ).values(
+        period=F('period_name')
+    ).annotate(
+        count=Count('id')
+    ).order_by('period')
+
+    # Print raw data for debugging
+    print("Raw Data:", list(data))
+
+    # Initialize complete data
+    if period == 'daily':
+        complete_data = {str(hour): 0 for hour in range(24)}  # 0-23 hours
+    elif period == 'weekly':
+        complete_data = {day: 0 for day in calendar.day_name}  # Monday to Sunday
+    elif period == 'monthly':
+        complete_data = {calendar.month_abbr[month]: 0 for month in range(1, 13)}
+
+    # Update the complete list with actual interaction counts
+    for item in data:
+        period_name = item['period']
+        period_name_str = period_name.strftime(period_format)
+        if period_name_str in complete_data:
+            complete_data[period_name_str] = item['count']
+
+    # Convert the dictionary to a list of dictionaries for the response
+    formatted_data = [{'period': period, 'count': count} for period, count in complete_data.items()]
+
+    return Response(formatted_data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def peak_interaction_time_view(request, period):
+    user = request.user
+
+    if period == 'time_of_day':
+        start_date = timezone.now() - timedelta(days=30)  # Last 30 days
+        trunc_func = TruncHour
+        time_ranges = [f'{i:02d}:00 - {i+3:02d}:59' for i in range(0, 24, 3)]
+    elif period == 'day_of_week':
+        start_date = timezone.now() - timedelta(weeks=6)  # Last 6 weeks
+        trunc_func = TruncDay
+        period_format = '%A'
+        time_ranges = list(calendar.day_name)
     else:
         return Response({"error": "Invalid period"}, status=400)
 
     interactions = Interaction.objects.filter(user=user, timestamp__gte=start_date)
 
-    if period == 'daily':
-        data = interactions.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
-    
-    elif period == 'weekly':
-        # Generate data for each of the last 7 days
-        end_date = timezone.now()
-        start_date = end_date - timedelta(days=7)
-        data = interactions.filter(timestamp__range=[start_date, end_date])
-        data = data.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
-    
-    elif period == 'monthly':
-        # Generate data for each of the last 30 days
-        end_date = timezone.now()
-        start_date = end_date - timedelta(days=30)
-        data = interactions.filter(timestamp__range=[start_date, end_date])
-        data = data.values('timestamp__date').annotate(count=Count('id')).order_by('timestamp__date')
+    if period == 'time_of_day':
+        data = interactions.annotate(
+            period_name=trunc_func('timestamp')
+        ).values(
+            period=F('period_name')
+        ).annotate(
+            count=Count('id')
+        ).order_by('period')
 
-    return Response(data)
+        complete_data = {time_range: 0 for time_range in time_ranges}
 
+        for item in data:
+            period_name = item['period']
+            period_hour = period_name.hour
+            time_range_index = period_hour // 3
+            time_range = time_ranges[time_range_index]
+            if time_range in complete_data:
+                complete_data[time_range] += item['count']
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def peak_interaction_time_view(request):
-    user = request.user
-    interactions = Interaction.objects.filter(user=user)
-    data = interactions.values('timestamp__hour').annotate(count=Count('id')).order_by('timestamp__hour')
+    elif period == 'day_of_week':
+        data = interactions.annotate(
+            period_name=trunc_func('timestamp')
+        ).values(
+            period=F('period_name')
+        ).annotate(
+            count=Count('id')
+        ).order_by('period')
 
-    return Response(data)
+        complete_data = {day: 0 for day in calendar.day_name}
+
+        for item in data:
+            period_name = item['period']
+            period_name_str = period_name.strftime(period_format)
+            if period_name_str in complete_data:
+                complete_data[period_name_str] += item['count']
+
+    formatted_data = [{'period': period, 'count': count} for period, count in complete_data.items()]
+
+    return Response({'data': formatted_data})
 
 
 @api_view(['GET'])
@@ -147,6 +225,7 @@ def engagement_metrics_view(request):
     }
 
     return Response(data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

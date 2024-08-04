@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "company",
     "individual",
     "corsheaders",
+    'nfc_management',
     "djoser",
     "rest_framework",
     "rest_framework.authtoken",
