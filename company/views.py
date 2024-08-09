@@ -140,7 +140,7 @@ def employee_detail(request, email):
         # Delete the employee
         employee.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

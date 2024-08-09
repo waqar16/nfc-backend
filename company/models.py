@@ -7,13 +7,13 @@ User = get_user_model()
 
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    company_name = models.CharField(max_length=255)
-    admin_name = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=255 , null=True, blank=True)
+    admin_name = models.CharField(max_length=255, null=True, blank=True)
     company_logo = models.URLField(blank=True, null=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
-    address = models.TextField()
-    company_description = models.TextField()
+    address = models.TextField(null=True, blank=True)
+    company_description = models.TextField(null=True, blank=True)
     website = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
 
@@ -37,7 +37,7 @@ class Employee(models.Model):
     linkedin = models.URLField(blank=True, null=True)
     github = models.URLField(blank=True, null=True)
     whatsapp = models.URLField(blank=True, null=True)
-    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    profile_pic = models.URLField(blank=True, null=True)
     registration_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):

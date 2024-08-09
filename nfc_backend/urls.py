@@ -33,4 +33,8 @@ urlpatterns = [
     path("api/", include("individual.urls")),
 
     path("api/", include("company.urls")),
+
+    # path("api/", include("nfc_management.urls")),
+
+    path("", include("appointments.urls")),
 ]

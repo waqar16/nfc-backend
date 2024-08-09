@@ -37,4 +37,5 @@ class Receivedprofile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     shared_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_from')
     shared_at = models.DateTimeField(auto_now_add=True)
+    profile_type_who_shared = models.CharField(max_length=50, choices=[('individual', 'Individual'), ('employee', 'Employee'), ('company', 'Company')])
 

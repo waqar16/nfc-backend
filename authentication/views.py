@@ -80,6 +80,7 @@ class CustomGoogleLogin(View):
             })
 
         except jwt.PyJWTError as e:
+            print(e)
             return JsonResponse({'error': 'Invalid token', 'details': str(e)}, status=400)
 
 

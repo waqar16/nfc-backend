@@ -41,9 +41,11 @@ INSTALLED_APPS = [
     "corsheaders",
     'nfc_management',
     "djoser",
+    "appointments",
     "rest_framework",
     "rest_framework.authtoken",
     "authentication",
+    "django_extensions",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -68,7 +70,7 @@ CREDENTIALS = os.path.join(BASE_DIR, 'nfc_backend', 'client_secret.json')
 GOOGLE_CLIENT_ID = '1036461909018-v32f9s35hefkbeq70gterh12sioug5a5.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = 'v61-By3jx9FWsMdoBwpjAxwg'
 # GOOGLE_REDIRECT_URI = 'http://localhost:3000/rest/v1/calendar/redirect/'
-GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/google/callback/'
+GOOGLE_REDIRECT_URI = 'https://127.0.0.1:8000/google/callback/'
 
 
 # Google API configuration

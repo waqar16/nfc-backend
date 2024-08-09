@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from .models import UserProfile, Receivedprofile
+from company.models import Company
 from .serializers import UserProfileSerializer, ShareProfileSerializer, ReceivedprofileSerializer
 from .utils import encrypt_data, decrypt_data
 from django.contrib.auth import get_user_model
@@ -13,7 +14,9 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from django.views.decorators.csrf import csrf_exempt
-import json
+from company.models import Company
+from company.serializers import CompanySerializer
+from django.core.mail import send_mail
 
 User = get_user_model()
 
@@ -51,12 +54,19 @@ def user_profile_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticatedOrReadOnly])  # Only authenticated users can modify
+@permission_classes([IsAuthenticatedOrReadOnly])
 def user_profile_detail(request, pk):
     try:
         profile = UserProfile.objects.get(user=pk)
     except UserProfile.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        # If UserProfile does not exist, try to fetch from Company model
+        try:
+            company = Company.objects.get(user=pk)
+            # Serialize the Company data
+            serializer = CompanySerializer(company)
+            return Response(serializer.data)
+        except Company.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     # Ensure only the owner can update or delete
     if request.method in ['PUT', 'DELETE'] and profile.user != request.user:
@@ -81,16 +91,29 @@ def user_profile_detail(request, pk):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def share_profile_url(request):
-    user = request.user
     try:
-        profile = UserProfile.objects.get(user=user)
-    except UserProfile.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        user = User.objects.get(id=request.user.id)
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Construct the URL to be shared
-    profile_url = f'http://localhost:3000/profile/{user.id}'
+    profile_type = user.profile_type  # Assume 'profile_type' is a field in the user model
+
+    if profile_type == 'individual':
+        try:
+            profile = UserProfile.objects.get(user=user)
+        except UserProfile.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        profile_url = f'http://localhost:3000/profile/{user.id}'
+    elif profile_type == 'company':
+        try:
+            profile = Company.objects.get(user=user)
+        except Company.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        profile_url = f'http://localhost:3000/company/{user.id}'
+    else:
+        return Response({'detail': 'Invalid profile type.'}, status=status.HTTP_400_BAD_REQUEST)
+
     return Response({'profile_url': profile_url}, status=status.HTTP_200_OK)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -125,6 +148,7 @@ def nfc_read(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
+User = get_user_model()
 
 @api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
@@ -133,18 +157,42 @@ def share_profile(request):
     
     if request.method == 'POST':
         shared_to_email = request.data.get('shared_to')
-
+        
         try:
             shared_to_user = User.objects.get(email=shared_to_email)
         except User.DoesNotExist:
-            return Response({'error': 'User to share with does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-
+            # Send email with profile URL
+            if user.profile_type == 'company':
+                profile_url = f'http://localhost:3000/company/{user.id}'
+                sender_name = user.username
+            else:
+                profile_url = f'http://localhost:3000/profile/{user.id}'
+                sender_name = f"{user.first_name} {user.last_name}"
+            
+            subject = 'Profile Shared with You'
+            message = f'Hi there,\n\n{sender_name} has shared their profile with you. You can view the profile at the following URL:\n\n{profile_url}\n\nBest regards,\nOneSec Team'
+            from_email = settings.EMAIL_HOST_USER
+            recipient_list = [shared_to_email]
+            
+            send_mail(subject, message, from_email, recipient_list)
+            
+            return Response({'message': 'User does not exist, but email sent successfully'}, status=status.HTTP_200_OK)
+        
         # Create ShareProfile entry
         share_profile_data = {
             'user': user.id,
             'shared_to': shared_to_user.id
         }
-        print(share_profile_data)
+
+        if user.profile_type == 'company':
+            profile_url = f'http://localhost:3000/company/{user.id}'
+            sent_to = shared_to_user.username
+            sender_name = user.username
+        else:
+            profile_url = f'http://localhost:3000/profile/{user.id}'
+            sent_to = f"{shared_to_user.first_name} {shared_to_user.last_name}"
+            sender_name = f"{user.first_name} {user.last_name}"
+        
         share_profile_serializer = ShareProfileSerializer(data=share_profile_data)
         if share_profile_serializer.is_valid():
             share_profile_serializer.save()
@@ -154,26 +202,32 @@ def share_profile(request):
         # Create Receivedprofile entry
         received_profile_data = {
             'user': shared_to_user.id,
-            'shared_from': user.id
+            'shared_from': user.id,
+            'profile_type_who_shared': user.profile_type
         }
-        print(received_profile_data)
         received_profile_serializer = ReceivedprofileSerializer(data=received_profile_data)
         if received_profile_serializer.is_valid():
             received_profile_serializer.save()
         else:
             return Response(received_profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'message': 'Profile shared successfully'}, status=status.HTTP_201_CREATED)
+        # Send email with profile URL
+        subject = 'Profile Shared with You'
+        message = f'Hi {sent_to},\n\n{sender_name} has shared their profile with you. You can view the profile at the following URL:\n\n{profile_url}\n\nBest regards,\nOneSec Team'
+        from_email = settings.EMAIL_HOST_USER
+        recipient_list = [shared_to_email]
+        
+        send_mail(subject, message, from_email, recipient_list)
+
+        return Response({'message': 'Profile shared successfully and email sent'}, status=status.HTTP_201_CREATED)
     
     elif request.method == 'GET':
-        user = request.user
         try:   
             received_profiles = Receivedprofile.objects.filter(user=user)
             serializer = ReceivedprofileSerializer(received_profiles, many=True)
-            print("Serializer data:", serializer.data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            print("Error fetching received cards:", str(e))  # Debugging line
+            print("Error fetching received cards:", str(e))
             return Response({"error": "Error fetching received cards"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
