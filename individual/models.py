@@ -22,11 +22,6 @@ class UserProfile(models.Model):
     profile_pic = models.URLField(blank=True, null=True)
 
 
-# class UpdateProfilePic(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-
-
 class ShareProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     shared_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_to')
