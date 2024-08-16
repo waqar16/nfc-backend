@@ -25,6 +25,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-@y*v*+j3grnxj!8h**7y!t7yrjduk-%)25bmrgme2pkyf#w$xt"
 
+SECURE_SSL_REDIRECT = True  # Redirect all HTTP requests to HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -70,7 +75,7 @@ CREDENTIALS = os.path.join(BASE_DIR, 'nfc_backend', 'client_secret.json')
 GOOGLE_CLIENT_ID = '1036461909018-v32f9s35hefkbeq70gterh12sioug5a5.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = 'v61-By3jx9FWsMdoBwpjAxwg'
 # GOOGLE_REDIRECT_URI = 'http://localhost:3000/rest/v1/calendar/redirect/'
-GOOGLE_REDIRECT_URI = 'https://127.0.0.1:8000/google/callback/'
+GOOGLE_REDIRECT_URI = 'https://api.onesec.shop/google/callback/'
 
 
 # Google API configuration

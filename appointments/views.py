@@ -106,21 +106,31 @@ def schedule_meeting(request):
         request.session.pop('google_credentials', None)
         return redirect(f'/api/schedule-meeting/{query_params}')
     
-    payload = {
-        'access_token': credentials_data['id_token'],
-        'profile_type': 'individual',
-    }
+    # payload = {
+    #     'access_token2': credentials_data['access_token'],
+    #     'profile_type': 'individual',
+    # }
 
-    # Make the POST request to your custom Google login endpoint
-    custom_google_login_url = 'https://waqar123.pythonanywhere.com/auth/custom-google-login/'
-    google_response = requests.post(custom_google_login_url, json=payload, verify=False)
+    # # Make the POST request to your custom Google login endpoint
+    # custom_google_login_url = 'https://localhost:8000/auth/custom-google-login/'
+    # google_response = requests.post(custom_google_login_url, json=payload, verify=False)
 
-    if google_response.status_code == 200:
+    google_user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers={'Authorization': f'Bearer {credentials_data["access_token"]}'})
+
+    if google_user_info.status_code == 200:
         print("Custom Google login successful")
-        host = google_response.json().get('user_id')
+        google_user_info = google_user_info.json()
+        print(google_user_info)
+        email = google_user_info.get('email')
+        name = google_user_info.get('name')
+        first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
+        picture = google_user_info.get('picture')
+        host_object, created = User.objects.get_or_create(email=email, defaults={'first_name': first_name, 'last_name': last_name, 'profile_pic': picture})   
+        host = host_object.id
+        # host = google_response.json().get('user_id')
         # return Response(google_response.json())
     else:
-        print(f"Custom Google login failed with status code {google_response.status_code}")
+        print(f"Custom Google login failed with status code {google_user_info.status_code}")
         # return Response(google_response.json())
 
     # # Extract the access token from credentials_data
