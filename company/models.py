@@ -48,6 +48,3 @@ class Employee(models.Model):
             self.user.delete()
         super().delete(*args, **kwargs)
 
-
-
-

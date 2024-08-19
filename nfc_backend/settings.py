@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,17 +24,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-@y*v*+j3grnxj!8h**7y!t7yrjduk-%)25bmrgme2pkyf#w$xt"
+SECRET_KEY = config('SECRET_KEY')
 
-SECURE_SSL_REDIRECT = True  # Redirect all HTTP requests to HTTPS
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True  # Redirect all HTTP requests to HTTPS
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
@@ -64,6 +65,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    'schema_graph',
 
 ]
 
@@ -72,10 +74,10 @@ INSTALLED_APPS = [
 # Update this path to the correct location of your JSON file
 CREDENTIALS = os.path.join(BASE_DIR, 'nfc_backend', 'client_secret.json')
 
-GOOGLE_CLIENT_ID = '1036461909018-v32f9s35hefkbeq70gterh12sioug5a5.apps.googleusercontent.com'
-GOOGLE_CLIENT_SECRET = 'v61-By3jx9FWsMdoBwpjAxwg'
-# GOOGLE_REDIRECT_URI = 'http://localhost:3000/rest/v1/calendar/redirect/'
-GOOGLE_REDIRECT_URI = 'https://api.onesec.shop/google/callback/'
+# Google API configuration
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
+GOOGLE_REDIRECT_URI = config('GOOGLE_REDIRECT_URI')
 
 
 # Google API configuration
@@ -108,10 +110,6 @@ SOCIALACCOUNT_PROVIDERS = {
         'SECRET': 'v61-By3jx9FWsMdoBwpjAxwg',
     }
 }
-
-
-
-
 
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -159,14 +157,15 @@ WSGI_APPLICATION = "nfc_backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# Database settings
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'onesec',
-        'USER': 'onesec',
-        'PASSWORD': 'J7kL9mN2vQ',
-        'HOST': 'onesec.cxssaw8467rn.us-east-1.rds.amazonaws.com',
-        'PORT': '5432',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT', default=5432),
     }
 }
 
@@ -197,13 +196,13 @@ DJOSER = {
 
 }
 
-# Email backend configuration (assuming you're using SMTP)
+# Email backend configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Change to your email provider
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'wa4752928@gmail.com'  # Change to your email
-EMAIL_HOST_PASSWORD = 'xdnr awsy qrhk tqrt'  # Change to your email password
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

@@ -11,6 +11,13 @@ from .models import Appointment
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
+from rest_framework.pagination import PageNumberPagination
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 2  # Number of results per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 User = get_user_model()
@@ -275,18 +282,22 @@ def schedule_meeting(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_meetings(request):
     user = request.user
     appointments = Appointment.objects.filter(user=user.id)
-    return Response([{
+    paginator = StandardResultsSetPagination()
+    result_page = paginator.paginate_queryset(appointments, request)
+
+    return paginator.get_paginated_response([{
         'title': appointment.title,
         'description': appointment.description,
         'datetime': appointment.datetime,
         'host_email': appointment.host_email,
         'meeting_status': appointment.meeting_status,
-    } for appointment in appointments])
+    } for appointment in result_page])
 
 
 def build_query_params(meeting_details):
