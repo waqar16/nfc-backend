@@ -10,6 +10,14 @@ from .utils import encrypt_data, decrypt_data
 from django.contrib.auth import get_user_model
 from company.serializers import CompanySerializer
 from django.core.mail import send_mail
+from rest_framework.pagination import PageNumberPagination
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 2
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 
 User = get_user_model()
 
@@ -194,9 +202,16 @@ def share_profile(request):
             return Response(share_profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Create Receivedprofile entry
+        if user.profile_type == 'company':
+            user_profile = Company.objects.get(user=user)
+
+        else:
+            user_profile = UserProfile.objects.get(user=user)
+
         received_profile_data = {
             'user': shared_to_user.id,
             'shared_from': user.id,
+            'shared_from_email': user_profile.email,
             'profile_type_who_shared': user.profile_type
         }
         received_profile_serializer = ReceivedprofileSerializer(data=received_profile_data)
@@ -216,10 +231,12 @@ def share_profile(request):
         return Response({'message': 'Profile shared successfully and email sent'}, status=status.HTTP_201_CREATED)
     
     elif request.method == 'GET':
-        try:   
-            received_profiles = Receivedprofile.objects.filter(user=user)
-            serializer = ReceivedprofileSerializer(received_profiles, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            received_profiles = Receivedprofile.objects.filter(user=request.user)
+            paginator = StandardResultsSetPagination()
+            result_page = paginator.paginate_queryset(received_profiles, request)
+            serializer = ReceivedprofileSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             print("Error fetching received cards:", str(e))
             return Response({"error": "Error fetching received cards"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

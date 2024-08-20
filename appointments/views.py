@@ -206,7 +206,7 @@ def schedule_meeting(request):
         description = request.query_params.get('description')
         start_datetime = request.query_params.get('start_datetime')
         attendee_email = request.query_params.get('attendee_email')
-        user_id = request.query_params.get('user_id')
+        user_id = request.query_params.get('user_id') #attendee
 
         # Ensure all required fields are present
         if not title:
@@ -259,9 +259,10 @@ def schedule_meeting(request):
             user = get_object_or_404(User, id=user_id)
             host = get_object_or_404(User, id=host)
             Appointment.objects.create(
-                user=user,
+                attendee=user,
                 host=host,
-                host_email=attendee_email,
+                host_email=host.email,
+                attendee_email=user.email,
                 title=title,
                 description=description,
                 datetime=start_datetime,
@@ -270,6 +271,7 @@ def schedule_meeting(request):
             )
 
             return redirect('https://calendar.google.com/calendar/u/0/r')
+        
         elif response.status_code == 401:
             # If the token is invalid, reauthorize the user
             # Retrieve meeting details from the session
@@ -287,17 +289,43 @@ def schedule_meeting(request):
 @permission_classes([IsAuthenticated])
 def get_meetings(request):
     user = request.user
-    appointments = Appointment.objects.filter(user=user.id)
-    paginator = StandardResultsSetPagination()
-    result_page = paginator.paginate_queryset(appointments, request)
 
-    return paginator.get_paginated_response([{
+    # Appointments where the authenticated user is the host
+    host_appointments = Appointment.objects.filter(host=user)
+
+    # Appointments where the authenticated user is an attendee
+    attendee_appointments = Appointment.objects.filter(attendees__in=[user])
+
+    # Pagination for both host and attendee appointments
+    paginator = StandardResultsSetPagination()
+    
+    # Paginate host appointments
+    host_result_page = paginator.paginate_queryset(host_appointments, request)
+    host_data = [{
         'title': appointment.title,
         'description': appointment.description,
-        'datetime': appointment.datetime,
         'host_email': appointment.host_email,
+        'datetime': appointment.datetime,
         'meeting_status': appointment.meeting_status,
-    } for appointment in result_page])
+        'type': 'host'  # Distinguish the type
+    } for appointment in host_result_page]
+    
+    # Paginate attendee appointments
+    attendee_result_page = paginator.paginate_queryset(attendee_appointments, request)
+    attendee_data = [{
+        'title': appointment.title,
+        'description': appointment.description,
+        'attendee_email': appointment.attendee_email,
+        'datetime': appointment.datetime,
+        'meeting_status': appointment.meeting_status,
+        'type': 'attendee'  # Distinguish the type
+    } for appointment in attendee_result_page]
+
+    # Combine host and attendee data
+    combined_data = host_data + attendee_data
+
+    return paginator.get_paginated_response(combined_data)
+
 
 
 def build_query_params(meeting_details):

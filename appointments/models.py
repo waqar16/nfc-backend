@@ -6,9 +6,10 @@ User = get_user_model()
 
 
 class Appointment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
-    host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='host')
-    host_email = models.EmailField()
+    host = models.ForeignKey(User, related_name='hosted_appointments', on_delete=models.CASCADE)
+    attendees = models.ManyToManyField(User, related_name='attended_appointments')
+    host_email = models.EmailField(null=True, blank=True)
+    attendee_email = models.TextField(null=True, blank=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
     datetime = models.DateTimeField()
@@ -16,7 +17,7 @@ class Appointment(models.Model):
     meeting_status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('completed', 'Completed')])
 
     def __str__(self):
-        return f"Appointment with {self.host_email} on {self.datetime}"
+        return f"Appointment with {self.attendee_email} by {self.host_email} on {self.datetime}"
     
     def update_status(self):
         # Ensure that datetime is a datetime object
