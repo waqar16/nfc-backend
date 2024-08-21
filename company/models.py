@@ -16,6 +16,8 @@ class Company(models.Model):
     company_description = models.TextField(null=True, blank=True)
     website = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
+    receive_marketing_emails = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.company_name
@@ -38,6 +40,7 @@ class Employee(models.Model):
     github = models.URLField(blank=True, null=True)
     whatsapp = models.URLField(blank=True, null=True)
     profile_pic = models.URLField(blank=True, null=True)
+    receive_marketing_emails = models.BooleanField(default=False)
     registration_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):

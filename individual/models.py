@@ -20,12 +20,19 @@ class UserProfile(models.Model):
     github = models.URLField(blank=True, null=True)
     whatsapp = models.IntegerField(blank=True, null=True)
     profile_pic = models.URLField(blank=True, null=True)
+    receive_marketing_emails = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.position})"
 
 
 class ShareProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     shared_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_to')
     shared_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} shared profile to {self.shared_to}"
 
 
 class Receivedprofile(models.Model):
@@ -35,3 +42,5 @@ class Receivedprofile(models.Model):
     shared_at = models.DateTimeField(auto_now_add=True)
     profile_type_who_shared = models.CharField(max_length=50, choices=[('individual', 'Individual'), ('employee', 'Employee'), ('company', 'Company')])
 
+    def __str__(self):
+        return f"{self.user} received profile from {self.shared_from}"

@@ -105,7 +105,7 @@ def share_profile_url(request):
             profile = UserProfile.objects.get(user=user)
         except UserProfile.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        profile_url = f'http://localhost:3000/profile/{user.id}'
+        profile_url = f'https://app.onesec.shop/profile/{user.id}'
     elif profile_type == 'company':
         try:
             profile = Company.objects.get(user=user)

@@ -41,6 +41,7 @@ AUTH_USER_MODEL = 'authentication.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [
+    "my_admin",
     "analytics",
     "company",
     "individual",
