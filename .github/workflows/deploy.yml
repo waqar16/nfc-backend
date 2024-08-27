@@ -20,14 +20,14 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -r ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/app
+        scp -r ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/nfc-backend
 
     - name: SSH into EC2 and deploy
       run: |
         ssh ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-        cd /home/ubuntu/app
-        docker stop django-app || :
-        docker rm django-app || :
-        docker build -t django-app .
-        docker run -d -p 8000:8000 --name django-app django-app
+        cd /home/ubuntu/nfc-backend
+        docker stop onesec-api-project || :
+        docker rm onesec-api-project || :
+        docker build -t onesec-api-project .
+        docker run -d -p 8000:8000 --name onesec-api-project onesec-api-project
         EOF
