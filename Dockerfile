@@ -22,6 +22,6 @@ EXPOSE 8000
 # Define environment variable
 ENV NAME=World
 
-# Run app.py when the container launches
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Run Gunicorn server
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "nfc_backend.wsgi:application"]
 
