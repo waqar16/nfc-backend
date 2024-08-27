@@ -7,7 +7,7 @@ User = get_user_model()
 
 class Appointment(models.Model):
     host = models.ForeignKey(User, related_name='hosted_appointments', on_delete=models.CASCADE)
-    attendees = models.ManyToManyField(User, related_name='attended_appointments')
+    attendee = models.ForeignKey(User, related_name='attended_appointments', on_delete=models.CASCADE) 
     host_email = models.EmailField(null=True, blank=True)
     attendee_email = models.TextField(null=True, blank=True)
     title = models.CharField(max_length=255)

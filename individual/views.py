@@ -111,7 +111,7 @@ def share_profile_url(request):
             profile = Company.objects.get(user=user)
         except Company.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        profile_url = f'http://localhost:3000/company/{user.id}'
+        profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
     else:
         return Response({'detail': 'Invalid profile type.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -165,10 +165,10 @@ def share_profile(request):
         except User.DoesNotExist:
             # Send email with profile URL
             if user.profile_type == 'company':
-                profile_url = f'http://localhost:3000/company/{user.id}'
+                profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
                 sender_name = user.username
             else:
-                profile_url = f'http://localhost:3000/profile/{user.id}'
+                profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
                 sender_name = f"{user.first_name} {user.last_name}"
             
             subject = 'Profile Shared with You'
@@ -187,11 +187,11 @@ def share_profile(request):
         }
 
         if user.profile_type == 'company':
-            profile_url = f'http://localhost:3000/company/{user.id}'
+            profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
             sent_to = shared_to_user.username
             sender_name = user.username
         else:
-            profile_url = f'http://localhost:3000/profile/{user.id}'
+            profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
             sent_to = f"{shared_to_user.first_name} {shared_to_user.last_name}"
             sender_name = f"{user.first_name} {user.last_name}"
         

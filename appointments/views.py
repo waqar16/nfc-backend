@@ -96,7 +96,7 @@ def google_auth_callback(request):
     meeting_details = request.session.get('meeting_details')
 
     # if not meeting_details:
-    #     return redirect('http://localhost:3000/schedule-meeting')
+    #     return redirect('https://letsconnect.onesec.shop/schedule-meeting')
 
     # Construct the query parameters from the session data
     query_params = build_query_params(meeting_details)
@@ -132,7 +132,7 @@ def schedule_meeting(request):
         name = google_user_info.get('name')
         first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
         picture = google_user_info.get('picture')
-        host_object, created = User.objects.get_or_create(email=email, defaults={'first_name': first_name, 'last_name': last_name, 'profile_pic': picture})   
+        host_object, created = User.objects.get_or_create(email=email, defaults={'first_name': first_name, 'last_name': last_name})
         host = host_object.id
         # host = google_response.json().get('user_id')
         # return Response(google_response.json())

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Event</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        h1 {
+            color: #333;
+        }
+        .event-details {
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>New Event: {{ event_name }}</h1>
+        <p>Dear Subscriber,</p>
+        <p>We are excited to announce a new event:</p>
+
+        <div class="event-details">
+            <p><strong>Date:</strong> {{ event_date }}</p>
+            <p><strong>Time:</strong> {{ event_time }}</p>
+            <p><strong>Location:</strong> {{ event_location }}</p>
+            <p>{{ event_description }}</p>
+        </div>
+
+        <p>We hope to see you there!</p>
+
+        <p>Best Regards,<br>Your OneSec Team</p>
+
+        <div class="footer">
+            <p>If you no longer wish to receive these emails, you can unsubscribe at any time through you dashboard.</p>
+        </div>
+    </div>
+</body>
+</html>
