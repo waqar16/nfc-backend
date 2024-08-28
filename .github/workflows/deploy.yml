@@ -28,8 +28,8 @@ jobs:
       run: |
         ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
         cd /home/ubuntu/nfc-backend
-        docker stop onesec-api-project || :
-        docker rm onesec-api-project || :
-        docker build -t onesec-api-project .
-        docker run -d -p 8000:8000 --name onesec-api-project onesec-api-project
+        sudo docker stop onesec-api-project || :
+        sudo docker rm onesec-api-project || :
+        sudo docker build -t onesec-api-project .
+        sudo docker run -d -p 8000:8000 --name onesec-api-project onesec-api-project
         EOF
