@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from django.core.mail import send_mail
+from nfc_backend.settings import EMAIL_HOST_USER
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from .models import Company, Employee
@@ -10,14 +11,14 @@ from .serializers import CompanySerializer, EmployeeSerializer
 
 User = get_user_model()
 
-# Email backend configuration (assuming you're using SMTP)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Change to your email provider
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'wa4752928@gmail.com'  # Change to your email
-EMAIL_HOST_PASSWORD = 'xdnr awsy qrhk tqrt'  # Change to your email password
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# # Email backend configuration (assuming you're using SMTP)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # Change to your email provider
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'wa4752928@gmail.com'  # Change to your email
+# EMAIL_HOST_PASSWORD = 'xdnr awsy qrhk tqrt'  # Change to your email password
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 @api_view(['GET', 'POST'])
@@ -79,11 +80,12 @@ def employee_list(request):
             company = Company.objects.filter(user=request.user).first()
             if company:
                 employee = serializer.save(company=company)
-                registration_url = request.build_absolute_uri(reverse('complete-registration', args=[employee.registration_token, employee.email, employee.first_name, employee.last_name]))
+                registration_url = f'https/letsconnect.onesec.shop/complete-registration/{employee.registration_token}/{ employee.email}/{employee.first_name}/{employee.last_name}'
+                # registration_url = request.build_absolute_uri(reverse('complete-registration', args=[employee.registration_token, employee.email, employee.first_name, employee.last_name]))
                 send_mail(
                     'Complete Your Registration',
                     f'Please complete your registration by visiting the following link: {registration_url}',
-                    DEFAULT_FROM_EMAIL,
+                    EMAIL_HOST_USER,
                     [employee.email],
                     fail_silently=False,
                 )

@@ -1,4 +1,4 @@
-from django.conf import settings
+from nfc_backend.settings import EMAIL_HOST_USER
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -173,7 +173,7 @@ def share_profile(request):
             
             subject = 'Profile Shared with You'
             message = f'Hi there,\n\n{sender_name} has shared their profile with you. You can view the profile at the following URL:\n\n{profile_url}\n\nBest regards,\nOneSec Team'
-            from_email = settings.EMAIL_HOST_USER
+            from_email = EMAIL_HOST_USER
             recipient_list = [shared_to_email]
             
             send_mail(subject, message, from_email, recipient_list)
@@ -223,7 +223,7 @@ def share_profile(request):
         # Send email with profile URL
         subject = 'Profile Shared with You'
         message = f'Hi {sent_to},\n\n{sender_name} has shared their profile with you. You can view the profile at the following URL:\n\n{profile_url}\n\nBest regards,\nOneSec Team'
-        from_email = settings.EMAIL_HOST_USER
+        from_email = EMAIL_HOST_USER
         recipient_list = [shared_to_email]
         
         send_mail(subject, message, from_email, recipient_list)
