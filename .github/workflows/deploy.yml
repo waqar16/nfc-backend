@@ -25,7 +25,7 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -r ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/nfc-backend
+        scp -r ./ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/nfc-backend
 
     - name: SSH into EC2 and deploy
       run: |
