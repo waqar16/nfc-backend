@@ -294,7 +294,7 @@ def get_meetings(request):
     host_appointments = Appointment.objects.filter(host=user)
 
     # Appointments where the authenticated user is an attendee
-    attendee_appointments = Appointment.objects.filter(attendees__in=[user])
+    attendee_appointments = Appointment.objects.filter(attendee__in=[user])
 
     # Pagination for both host and attendee appointments
     paginator = StandardResultsSetPagination()
