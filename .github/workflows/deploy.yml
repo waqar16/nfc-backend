@@ -20,6 +20,10 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+    - name: Build Docker image
+      run: |
+        docker build -t onesec-api-project .
+
     - name: Copy files to EC2
       run: |
         scp -i ~/.ssh/id_rsa -r ./* ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/nfc-backend
