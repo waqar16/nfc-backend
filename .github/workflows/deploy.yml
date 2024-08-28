@@ -40,6 +40,11 @@ jobs:
         # Rebuild and run the Docker container
         sudo docker build -t onesec-api-project .
         sudo docker run -d -p 8000:8000 --name onesec-api-project onesec-api-project
+
+
+        # Apply migrations and collect static files
+        sudo docker exec onesec-api-project python manage.py migrate
+        sudo docker exec onesec-api-project python manage.py collectstatic --noinput
         
         # Check the logs for troubleshooting
         sudo docker logs onesec-api-project
