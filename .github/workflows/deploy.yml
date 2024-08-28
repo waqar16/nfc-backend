@@ -18,6 +18,11 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
+    - name: Add EC2 to known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
     - name: Copy files to EC2
       run: |
         scp -r ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/nfc-backend
