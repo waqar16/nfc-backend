@@ -269,7 +269,11 @@ def schedule_meeting(request):
                 google_event_id=response.json()['id'],
                 meeting_status='pending'
             )
-            return redirect(f'https://letsconnect.onesec.shop/profiles/{user_id}?status=success')
+            if user.profile_type == 'individual':
+                return redirect(f'https://letsconnect.onesec.shop/profile/{user_id}?status=success')
+            else:
+                return redirect(f'https://letsconnect.onesec.shop/company/{user_id}?status=success')
+
             # return redirect('https://calendar.google.com/calendar/u/0/r')
         
         elif response.status_code == 401:
@@ -281,7 +285,11 @@ def schedule_meeting(request):
             return redirect(f'/api/schedule-meeting/{query_params}')
         else:
             # return Response(response.json(), status=response.status_code)
-            return redirect(f'https://letsconnect.onesec.shop/profiles/{user_id}?status=failure')
+
+            if user.profile_type == 'individual':
+                return redirect(f'https://letsconnect.onesec.shop/profile/{user_id}?status=failure')
+            else:
+                return redirect(f'https://letsconnect.onesec.shop/company/{user_id}?status=failure')
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
