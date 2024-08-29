@@ -269,8 +269,8 @@ def schedule_meeting(request):
                 google_event_id=response.json()['id'],
                 meeting_status='pending'
             )
-
-            return redirect('https://calendar.google.com/calendar/u/0/r')
+            return redirect(f'https://letsconnect.onesec.shop/profiles/{user_id}?status=success')
+            # return redirect('https://calendar.google.com/calendar/u/0/r')
         
         elif response.status_code == 401:
             # If the token is invalid, reauthorize the user
@@ -280,7 +280,8 @@ def schedule_meeting(request):
             request.session.pop('google_credentials', None)
             return redirect(f'/api/schedule-meeting/{query_params}')
         else:
-            return Response(response.json(), status=response.status_code)
+            # return Response(response.json(), status=response.status_code)
+            return redirect(f'https://letsconnect.onesec.shop/profiles/{user_id}?status=failure')
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
