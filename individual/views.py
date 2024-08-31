@@ -1,3 +1,5 @@
+from django.http import JsonResponse
+import requests
 from nfc_backend.settings import EMAIL_HOST_USER
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -5,6 +7,8 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from .models import UserProfile, Receivedprofile
 from company.models import Company
+# from company.models import Employee
+from rest_framework.authtoken.models import Token
 from .serializers import UserProfileSerializer, ShareProfileSerializer, ReceivedprofileSerializer
 from .utils import encrypt_data, decrypt_data
 from django.contrib.auth import get_user_model
@@ -66,6 +70,7 @@ def user_profile_detail(request, pk):
             # Serialize the Company data
             serializer = CompanySerializer(company)
             return Response(serializer.data)
+    
         except Company.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -106,6 +111,7 @@ def share_profile_url(request):
         except UserProfile.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
+    
     elif profile_type == 'company':
         try:
             profile = Company.objects.get(user=user)
@@ -240,3 +246,74 @@ def share_profile(request):
         except Exception as e:
             print("Error fetching received cards:", str(e))
             return Response({"error": "Error fetching received cards"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        
+@api_view(['POST'])
+def share_back_profile(request):
+    access_token = request.data.get('access_token')
+    profile_type = request.data.get('profile_type')
+
+    if not access_token:
+        return Response({'error': 'No access token provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if profile_type not in ['individual', 'employee', 'company']:
+        return Response({'error': 'Invalid profile type'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Fetch user info from Google
+    google_user_info = requests.get(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    
+    if google_user_info.status_code == 200:
+        google_user_info = google_user_info.json()
+        email = google_user_info.get('email')
+        name = google_user_info.get('name')
+        first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
+        picture = google_user_info.get('picture')
+
+        if not email:
+            return Response({'error': 'Failed to retrieve email from token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if user exists by email
+        user = User.objects.filter(email=email).first()
+
+        if user:
+            if user.has_usable_password():
+                return Response({'error': 'Account already exists with this email. Please login with your email and password then share back.'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Update user profile_type if needed
+                if user.profile_type != profile_type:
+                    user.profile_type = profile_type
+                    user.save()
+        else:
+            # Create a new user if none exists
+            user = User.objects.create(
+                username=email,  # or use some other unique identifier for the username
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                profile_type=profile_type,
+                authentication_type='google'
+            )
+            user.set_unusable_password()
+            user.save()
+
+        # Generate or retrieve auth token
+        token, created = Token.objects.get_or_create(user=user)
+
+        return JsonResponse({
+            'message': 'Login successful',
+            'user_id': user.id,
+            'username': user.username,
+            'auth_token': token.key,
+            'profile_type': user.profile_type,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'profile_pic': picture,
+            'authentication_type': user.authentication_type
+        })
+
+    else:
+        return Response({'error': 'Google login failed'}, status=status.HTTP_400_BAD_REQUEST)

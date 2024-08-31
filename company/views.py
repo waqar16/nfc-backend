@@ -153,5 +153,3 @@ def delete_employee_profile(request, email):
         return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     except Employee.DoesNotExist:
         return Response({'detail': 'Employee profile not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)

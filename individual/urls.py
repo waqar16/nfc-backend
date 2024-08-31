@@ -14,6 +14,7 @@ urlpatterns = [
     path('share-profile-url/', views.share_profile_url, name='share-profile-url'),
     path('share-profile/', views.share_profile, name='share-profile'),
     path('received-cards/', views.share_profile, name='received_profiles'),
+    path('share-back-profile/', views.share_back_profile, name='share_back_profile'),
     # path('schedule-meeting/', views.ScheduleMeetingView.as_view(), name='ScheduleMeetingView'),
 
     # path('rest/v1/calendar/init/', google_calendar_init_view, name='google_calendar_init'),
