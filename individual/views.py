@@ -10,7 +10,7 @@ from company.models import Company
 # from company.models import Employee
 from rest_framework.authtoken.models import Token
 from .serializers import UserProfileSerializer, ShareProfileSerializer, ReceivedprofileSerializer
-from .utils import encrypt_data, decrypt_data
+# from .utils import encrypt_data, decrypt_data
 from django.contrib.auth import get_user_model
 from company.serializers import CompanySerializer
 from django.core.mail import send_mail
@@ -18,7 +18,7 @@ from rest_framework.pagination import PageNumberPagination
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 2
+    page_size = 4
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -123,40 +123,40 @@ def share_profile_url(request):
 
     return Response({'profile_url': profile_url}, status=status.HTTP_200_OK)
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def nfc_write(request):
-    try:
-        profile_data = request.data
-        if not profile_data:
-            return Response({'error': 'Profile data is required'}, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def nfc_write(request):
+#     try:
+#         profile_data = request.data
+#         if not profile_data:
+#             return Response({'error': 'Profile data is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        encrypted_data = encrypt_data(profile_data)
-        print("Encrypted Data:", encrypted_data)
-        print("Decrypted Data:", decrypt_data(encrypted_data))
-        return Response({'encrypted_data': encrypted_data}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#         encrypted_data = encrypt_data(profile_data)
+#         print("Encrypted Data:", encrypted_data)
+#         print("Decrypted Data:", decrypt_data(encrypted_data))
+#         return Response({'encrypted_data': encrypted_data}, status=status.HTTP_200_OK)
+#     except Exception as e:
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def nfc_read(request):
-    try:
-        encrypted_data = request.data.get('encrypted_data')
-        print("Received Encrypted Data:", encrypted_data)
-        if not encrypted_data:
-            return Response({'error': 'Encrypted text is required'}, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def nfc_read(request):
+#     try:
+#         encrypted_data = request.data.get('encrypted_data')
+#         print("Received Encrypted Data:", encrypted_data)
+#         if not encrypted_data:
+#             return Response({'error': 'Encrypted text is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        decrypted_data = decrypt_data(encrypted_data)
-        print("Decrypted Data:", decrypted_data)
-        return Response(decrypted_data, status=status.HTTP_200_OK)
-    except Exception as e:
-        print("Error:", str(e))
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#         decrypted_data = decrypt_data(encrypted_data)
+#         print("Decrypted Data:", decrypted_data)
+#         return Response(decrypted_data, status=status.HTTP_200_OK)
+#     except Exception as e:
+#         print("Error:", str(e))
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
-User = get_user_model()
+# User = get_user_model()
 
 @api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
@@ -238,7 +238,7 @@ def share_profile(request):
     
     elif request.method == 'GET':
         try:
-            received_profiles = Receivedprofile.objects.filter(user=request.user)
+            received_profiles = Receivedprofile.objects.filter(user=request.user).order_by('-shared_at')
             paginator = StandardResultsSetPagination()
             result_page = paginator.paginate_queryset(received_profiles, request)
             serializer = ReceivedprofileSerializer(result_page, many=True)
