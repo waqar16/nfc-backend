@@ -246,8 +246,8 @@ def share_profile(request):
         except Exception as e:
             print("Error fetching received cards:", str(e))
             return Response({"error": "Error fetching received cards"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
+
+       
 @api_view(['POST'])
 def share_back_profile(request):
     access_token = request.data.get('access_token')
@@ -281,11 +281,11 @@ def share_back_profile(request):
         if user:
             if user.has_usable_password():
                 return Response({'error': 'Account already exists with this email. Please login with your email and password then share back.'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # Update user profile_type if needed
-                if user.profile_type != profile_type:
-                    user.profile_type = profile_type
-                    user.save()
+            # else:
+            #     # Update user profile_type if needed
+            #     if user.profile_type != profile_type:
+            #         user.profile_type = profile_type
+            #         user.save()
         else:
             # Create a new user if none exists
             user = User.objects.create(
