@@ -7,11 +7,13 @@ from nfc_backend.settings import EMAIL_HOST_USER
 from django.contrib.auth import get_user_model
 from .models import Company, Employee
 from .serializers import CompanySerializer, EmployeeSerializer
+from rest_framework.permissions import AllowAny
 
 User = get_user_model()
 
+
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def company_profile_list(request):
     if request.method == 'GET':
         profiles = Company.objects.filter(user=request.user)
@@ -30,7 +32,7 @@ def company_profile_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def company_detail(request, pk):
     try:
         company = Company.objects.get(user=pk)

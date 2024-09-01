@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from .models import UserProfile, Receivedprofile
 from company.models import Company
-# from company.models import Employee
+from company.models import Employee
 from rest_framework.authtoken.models import Token
 from .serializers import UserProfileSerializer, ShareProfileSerializer, ReceivedprofileSerializer
 # from .utils import encrypt_data, decrypt_data
@@ -112,6 +112,13 @@ def share_profile_url(request):
             return Response(status=status.HTTP_404_NOT_FOUND)
         profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
     
+    elif profile_type == 'employee':
+        try:
+            profile = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+    
     elif profile_type == 'company':
         try:
             profile = Company.objects.get(user=user)
@@ -173,6 +180,9 @@ def share_profile(request):
             if user.profile_type == 'company':
                 profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
                 sender_name = user.username
+            elif user.profile_type == 'employee':
+                profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+                sender_name = f"{user.first_name} {user.last_name}"
             else:
                 profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
                 sender_name = f"{user.first_name} {user.last_name}"
@@ -196,6 +206,10 @@ def share_profile(request):
             profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
             sent_to = shared_to_user.username
             sender_name = user.username
+        elif user.profile_type == 'employee':
+            profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+            sent_to = f"{shared_to_user.first_name} {shared_to_user.last_name}"
+            sender_name = f"{user.first_name} {user.last_name}"
         else:
             profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
             sent_to = f"{shared_to_user.first_name} {shared_to_user.last_name}"
@@ -210,6 +224,9 @@ def share_profile(request):
         # Create Receivedprofile entry
         if user.profile_type == 'company':
             user_profile = Company.objects.get(user=user)
+
+        elif user.profile_type == 'employee':
+            user_profile = Employee.objects.get(user=user)
 
         else:
             user_profile = UserProfile.objects.get(user=user)
@@ -280,7 +297,7 @@ def share_back_profile(request):
 
         if user:
             if user.has_usable_password():
-                return Response({'error': 'Account already exists with this email. Please login with your email and password then share back.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Email already exist. You need to login with your password.'}, status=status.HTTP_400_BAD_REQUEST)
             # else:
             #     # Update user profile_type if needed
             #     if user.profile_type != profile_type:
