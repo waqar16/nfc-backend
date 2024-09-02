@@ -351,7 +351,6 @@ def get_meetings(request):
 def download_vcard(request, user_id):
     # Fetch the user
     user = get_object_or_404(User, id=user_id)
-    employee_profile = get_object_or_404(Employee, email=user.email)
 
     # Handle Employee profile
     if user.profile_type == 'employee':
