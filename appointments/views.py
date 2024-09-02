@@ -349,55 +349,72 @@ def get_meetings(request):
 
 
 def download_vcard(request, user_id):
-    # account_type = request.GET.get('account_type')
+    # Fetch the user
+    user = get_object_or_404(User, id=user_id)
+    employee_profile = get_object_or_404(Employee, email=user.email)
 
-    user = User.objects.get(id=user_id)
-
+    # Handle Employee profile
     if user.profile_type == 'employee':
-        # Handle Employee profile
+
         employee_profile = get_object_or_404(Employee, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:3.0
+        VERSION:2.1
+        N:{employee_profile.last_name};{employee_profile.first_name};;
         FN:{employee_profile.first_name} {employee_profile.last_name}
+        TITLE:{employee_profile.position}
+        PHOTO;GIF:{employee_profile.profile_pic}
+        TEL;WORK;VOICE:{employee_profile.phone}
+        TEL;HOME;VOICE:{employee_profile.phone}
+        ADR;WORK;PREF:;;{employee_profile.address}
+        ADR;HOME:;;{employee_profile.address}
         EMAIL:{employee_profile.email}
-        TEL:{employee_profile.phone}
-        ADR:{employee_profile.address}
         END:VCARD
         """.strip()
         filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
     
-    elif user.profile_type == 'profile':
-        # Handle UserProfile profile
+    # Handle UserProfile profile
+    elif user.profile_type == 'individual':
         user_profile = get_object_or_404(UserProfile, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:3.0
+        VERSION:2.1
+        N:{user_profile.last_name};{user_profile.first_name};;
         FN:{user_profile.first_name} {user_profile.last_name}
+        TITLE:{user_profile.position}
+        PHOTO;GIF:{user_profile.profile_pic}
+        TEL;WORK;VOICE:{user_profile.phone}
+        TEL;HOME;VOICE:{user_profile.phone}
+        ADR;WORK;PREF:;;{user_profile.address}
+        ADR;HOME:;;{user_profile.address}
         EMAIL:{user_profile.email}
-        TEL:{user_profile.phone}
-        ADR:{user_profile.address}
         END:VCARD
         """.strip()
         filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
     
+    # Handle Company profile
     elif user.profile_type == 'company':
-        # Handle Company profile
         company = get_object_or_404(Company, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:3.0
+        VERSION:2.1
         FN:{company.admin_name}
-        EMAIL:{company.email}
-        TEL:{company.phone}
-        ADR:{company.address}
+        ORG:{company.company_name}
+        PHOTO;GIF:{company.company_logo}
+        TEL;WORK;VOICE:{company.phone}
+        TEL;HOME;VOICE:{company.phone}
+        ADR;WORK;PREF:;;{company.address}
+        ADR;HOME:;;{company.address}
+        EMAIL::{company.email}
         END:VCARD
         """.strip()
         filename = f"{company.admin_name}_contact.vcf"
     
+    # Handle invalid account type
     else:
         return HttpResponseForbidden("Invalid account type")
 
+    # Prepare and return the vCard response
     response = HttpResponse(vcard_data, content_type='text/vcard')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
