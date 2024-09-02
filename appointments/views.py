@@ -22,6 +22,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 User = get_user_model()
 
+
 def google_auth_request(request):
     title = request.GET.get('title')
     description = request.GET.get('description')

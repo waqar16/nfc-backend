@@ -107,8 +107,8 @@ SOCIALACCOUNT_PROVIDERS = {
         },
         'METHOD': 'oauth2',
         'VERIFIED_EMAIL': True,
-        'CLIENT_ID': '1036461909018-v32f9s35hefkbeq70gterh12sioug5a5.apps.googleusercontent.com',
-        'SECRET': 'v61-By3jx9FWsMdoBwpjAxwg',
+        'CLIENT_ID': config('GOOGLE_CLIENT_ID'),
+        'SECRET': config('GOOGLE_CLIENT_SECRET'),
     }
 }
 
