@@ -1,4 +1,5 @@
 import datetime
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework.response import Response
 from google_auth_oauthlib.flow import Flow
@@ -12,6 +13,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from rest_framework.pagination import PageNumberPagination
+from company.models import Company, Employee
+from individual.models import UserProfile
 
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -304,38 +307,100 @@ def get_meetings(request):
     host_appointments = Appointment.objects.filter(host=user)
 
     # Appointments where the authenticated user is an attendee
-    attendee_appointments = Appointment.objects.filter(attendee__in=[user])
+    attendee_appointments = Appointment.objects.filter(attendee=user)
 
-    # Pagination for both host and attendee appointments
+    # Create a dictionary to store unique appointments by ID
+    appointments_dict = {}
+
+    # Process host appointments
+    for appointment in host_appointments:
+        appointments_dict[appointment.id] = {
+            'title': appointment.title,
+            'description': appointment.description,
+            'host_email': appointment.host.email,
+            'datetime': appointment.datetime,
+            'meeting_status': appointment.meeting_status,
+            'type': 'host'  # Distinguish the type
+        }
+
+    # Process attendee appointments
+    for appointment in attendee_appointments:
+        # If the appointment is already in the dictionary, update the type if needed
+        if appointment.id in appointments_dict:
+            appointments_dict[appointment.id]['type'] = 'host & attendee'
+        else:
+            appointments_dict[appointment.id] = {
+                'title': appointment.title,
+                'description': appointment.description,
+                'attendee_email': appointment.attendee.email,
+                'datetime': appointment.datetime,
+                'meeting_status': appointment.meeting_status,
+                'type': 'attendee'  # Distinguish the type
+            }
+
+    # Convert dictionary to a list
+    combined_data = list(appointments_dict.values())
+
+    # Pagination
     paginator = StandardResultsSetPagination()
+    paginated_data = paginator.paginate_queryset(combined_data, request)
+
+    return paginator.get_paginated_response(paginated_data)
+
+
+def download_vcard(request, user_id):
+    # account_type = request.GET.get('account_type')
+
+    user = User.objects.get(id=user_id)
+
+    if user.profile_type == 'employee':
+        # Handle Employee profile
+        employee_profile = get_object_or_404(Employee, email=user.email)
+        vcard_data = f"""
+        BEGIN:VCARD
+        VERSION:3.0
+        FN:{employee_profile.first_name} {employee_profile.last_name}
+        EMAIL:{employee_profile.email}
+        TEL:{employee_profile.phone}
+        ADR:{employee_profile.address}
+        END:VCARD
+        """.strip()
+        filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
     
-    # Paginate host appointments
-    host_result_page = paginator.paginate_queryset(host_appointments, request)
-    host_data = [{
-        'title': appointment.title,
-        'description': appointment.description,
-        'host_email': appointment.host_email,
-        'datetime': appointment.datetime,
-        'meeting_status': appointment.meeting_status,
-        'type': 'host'  # Distinguish the type
-    } for appointment in host_result_page]
+    elif user.profile_type == 'profile':
+        # Handle UserProfile profile
+        user_profile = get_object_or_404(UserProfile, email=user.email)
+        vcard_data = f"""
+        BEGIN:VCARD
+        VERSION:3.0
+        FN:{user_profile.first_name} {user_profile.last_name}
+        EMAIL:{user_profile.email}
+        TEL:{user_profile.phone}
+        ADR:{user_profile.address}
+        END:VCARD
+        """.strip()
+        filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
     
-    # Paginate attendee appointments
-    attendee_result_page = paginator.paginate_queryset(attendee_appointments, request)
-    attendee_data = [{
-        'title': appointment.title,
-        'description': appointment.description,
-        'attendee_email': appointment.attendee_email,
-        'datetime': appointment.datetime,
-        'meeting_status': appointment.meeting_status,
-        'type': 'attendee'  # Distinguish the type
-    } for appointment in attendee_result_page]
+    elif user.profile_type == 'company':
+        # Handle Company profile
+        company = get_object_or_404(Company, email=user.email)
+        vcard_data = f"""
+        BEGIN:VCARD
+        VERSION:3.0
+        FN:{company.admin_name}
+        EMAIL:{company.email}
+        TEL:{company.phone}
+        ADR:{company.address}
+        END:VCARD
+        """.strip()
+        filename = f"{company.admin_name}_contact.vcf"
+    
+    else:
+        return HttpResponseForbidden("Invalid account type")
 
-    # Combine host and attendee data
-    combined_data = host_data + attendee_data
-
-    return paginator.get_paginated_response(combined_data)
-
+    response = HttpResponse(vcard_data, content_type='text/vcard')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 def build_query_params(meeting_details):
