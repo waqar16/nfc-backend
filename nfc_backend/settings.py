@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-@y*v*+j3grnxj!8h**7y!t7yrjduk-%)25bmrgme2pkyf#w$xt
 SECURE_SSL_REDIRECT = True  # Redirect all HTTP requests to HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True 
+SESSION_COOKIE_SECURE = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)

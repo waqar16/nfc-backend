@@ -118,3 +118,4 @@ yarg==0.1.9
 zope.event==5.0
 zope.interface==6.4.post2
 psycopg2-binary==2.9.9
+vobject==0.9.6.1
