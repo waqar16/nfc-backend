@@ -358,16 +358,16 @@ def download_vcard(request, user_id):
         employee_profile = get_object_or_404(Employee, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:2.1
-        N:{employee_profile.last_name};{employee_profile.first_name};;
+        VERSION:3.0
+        N:{employee_profile.last_name};{employee_profile.first_name};;;
         FN:{employee_profile.first_name} {employee_profile.last_name}
         TITLE:{employee_profile.position}
-        PHOTO;GIF:{employee_profile.profile_pic}
-        TEL;WORK;VOICE:{employee_profile.phone}
-        TEL;HOME;VOICE:{employee_profile.phone}
-        ADR;WORK;PREF:;;{employee_profile.address}
-        ADR;HOME:;;{employee_profile.address}
-        EMAIL:{employee_profile.email}
+        PHOTO;ENCODING=b;TYPE=GIF:{employee_profile.profile_pic}  # Note: You might need to convert this to base64
+        TEL;TYPE=WORK,VOICE:{employee_profile.phone}
+        TEL;TYPE=HOME,VOICE:{employee_profile.phone}
+        ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
+        ADR;TYPE=HOME:;;{employee_profile.address};;;;
+        EMAIL;TYPE=INTERNET:{employee_profile.email}
         END:VCARD
         """.strip()
         filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
@@ -377,16 +377,16 @@ def download_vcard(request, user_id):
         user_profile = get_object_or_404(UserProfile, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:2.1
-        N:{user_profile.last_name};{user_profile.first_name};;
+        VERSION:3.0
+        N:{user_profile.last_name};{user_profile.first_name};;;
         FN:{user_profile.first_name} {user_profile.last_name}
         TITLE:{user_profile.position}
-        PHOTO;GIF:{user_profile.profile_pic}
-        TEL;WORK;VOICE:{user_profile.phone}
-        TEL;HOME;VOICE:{user_profile.phone}
-        ADR;WORK;PREF:;;{user_profile.address}
-        ADR;HOME:;;{user_profile.address}
-        EMAIL:{user_profile.email}
+        PHOTO;ENCODING=b;TYPE=GIF:{user_profile.profile_pic}  # Ensure this is in base64 format
+        TEL;TYPE=WORK,VOICE:{user_profile.phone}
+        TEL;TYPE=HOME,VOICE:{user_profile.phone}
+        ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
+        ADR;TYPE=HOME:;;{user_profile.address};;;;
+        EMAIL;TYPE=INTERNET:{user_profile.email}
         END:VCARD
         """.strip()
         filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
@@ -396,15 +396,15 @@ def download_vcard(request, user_id):
         company = get_object_or_404(Company, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:2.1
+        VERSION:3.0
         FN:{company.admin_name}
         ORG:{company.company_name}
-        PHOTO;GIF:{company.company_logo}
-        TEL;WORK;VOICE:{company.phone}
-        TEL;HOME;VOICE:{company.phone}
-        ADR;WORK;PREF:;;{company.address}
-        ADR;HOME:;;{company.address}
-        EMAIL::{company.email}
+        PHOTO;ENCODING=b;TYPE=GIF:{company.company_logo}  # Ensure this is in base64 format
+        TEL;TYPE=WORK,VOICE:{company.phone}
+        TEL;TYPE=HOME,VOICE:{company.phone}
+        ADR;TYPE=WORK,PREF:;;{company.address};;;;
+        ADR;TYPE=HOME:;;{company.address};;;;
+        EMAIL;TYPE=INTERNET:{company.email}
         END:VCARD
         """.strip()
         filename = f"{company.admin_name}_contact.vcf"
