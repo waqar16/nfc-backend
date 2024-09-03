@@ -356,19 +356,19 @@ def download_vcard(request, user_id):
     if user.profile_type == 'employee':
         employee_profile = get_object_or_404(Employee, email=user.email)
         vcard_data = f"""
-        BEGIN:VCARD
-        VERSION:3.0
-        N:{employee_profile.last_name};{employee_profile.first_name};;;
-        FN:{employee_profile.first_name} {employee_profile.last_name}
-        TITLE:{employee_profile.position}
-        PHOTO;VALUE=URL;TYPE=GIF:{employee_profile.profile_pic}
-        TEL;TYPE=WORK,VOICE:{employee_profile.phone}
-        TEL;TYPE=HOME,VOICE:{employee_profile.phone}
-        ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
-        ADR;TYPE=HOME:;;{employee_profile.address};;;;
-        EMAIL;TYPE=INTERNET:{employee_profile.email}
-        END:VCARD
-        """.strip()
+BEGIN:VCARD
+VERSION:3.0
+N:{employee_profile.last_name};{employee_profile.first_name};;;
+FN:{employee_profile.first_name} {employee_profile.last_name}
+TITLE:{employee_profile.position}
+PHOTO;VALUE=URL;TYPE=GIF:{employee_profile.profile_pic}
+TEL;TYPE=WORK,VOICE:{employee_profile.phone}
+TEL;TYPE=HOME,VOICE:{employee_profile.phone}
+ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
+ADR;TYPE=HOME:;;{employee_profile.address};;;;
+EMAIL;TYPE=INTERNET:{employee_profile.email}
+END:VCARD
+""".strip()
         filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
     
     # Handle UserProfile profile
@@ -376,36 +376,36 @@ def download_vcard(request, user_id):
         user_profile = get_object_or_404(UserProfile, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
-        VERSION:3.0
-        N:{user_profile.last_name};{user_profile.first_name};;;
-        FN:{user_profile.first_name} {user_profile.last_name}
-        TITLE:{user_profile.position}
-        PHOTO;VALUE=URL;TYPE=GIF:{user_profile.profile_pic}
-        TEL;TYPE=WORK,VOICE:{user_profile.phone}
-        TEL;TYPE=HOME,VOICE:{user_profile.phone}
-        ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
-        ADR;TYPE=HOME:;;{user_profile.address};;;;
-        EMAIL;TYPE=INTERNET:{user_profile.email}
-        END:VCARD
-        """.strip()
+VERSION:3.0
+N:{user_profile.last_name};{user_profile.first_name};;;
+FN:{user_profile.first_name} {user_profile.last_name}
+TITLE:{user_profile.position}
+PHOTO;VALUE=URL;TYPE=GIF:{user_profile.profile_pic}
+TEL;TYPE=WORK,VOICE:{user_profile.phone}
+TEL;TYPE=HOME,VOICE:{user_profile.phone}
+ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
+ADR;TYPE=HOME:;;{user_profile.address};;;;
+EMAIL;TYPE=INTERNET:{user_profile.email}
+END:VCARD
+""".strip()
         filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
     
     # Handle Company profile
     elif user.profile_type == 'company':
         company = get_object_or_404(Company, email=user.email)
         vcard_data = f"""
-        BEGIN:VCARD
-        VERSION:3.0
-        FN:{company.admin_name}
-        ORG:{company.company_name}
-        PHOTO;VALUE=URL;TYPE=GIF:{company.company_logo}
-        TEL;TYPE=WORK,VOICE:{company.phone}
-        TEL;TYPE=HOME,VOICE:{company.phone}
-        ADR;TYPE=WORK,PREF:;;{company.address};;;;
-        ADR;TYPE=HOME:;;{company.address};;;;
-        EMAIL;TYPE=INTERNET:{company.email}
-        END:VCARD
-        """.strip()
+BEGIN:VCARD
+VERSION:3.0
+FN:{company.admin_name}
+ORG:{company.company_name}
+PHOTO;VALUE=URL;TYPE=GIF:{company.company_logo}
+TEL;TYPE=WORK,VOICE:{company.phone}
+TEL;TYPE=HOME,VOICE:{company.phone}
+ADR;TYPE=WORK,PREF:;;{company.address};;;;
+ADR;TYPE=HOME:;;{company.address};;;;
+EMAIL;TYPE=INTERNET:{company.email}
+END:VCARD
+""".strip()
         filename = f"{company.admin_name}_contact.vcf"
     
     # Handle invalid account type
