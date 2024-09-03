@@ -354,7 +354,6 @@ def download_vcard(request, user_id):
 
     # Handle Employee profile
     if user.profile_type == 'employee':
-
         employee_profile = get_object_or_404(Employee, email=user.email)
         vcard_data = f"""
         BEGIN:VCARD
@@ -362,7 +361,7 @@ def download_vcard(request, user_id):
         N:{employee_profile.last_name};{employee_profile.first_name};;;
         FN:{employee_profile.first_name} {employee_profile.last_name}
         TITLE:{employee_profile.position}
-        PHOTO;ENCODING=b;TYPE=GIF:{employee_profile.profile_pic}  # Note: You might need to convert this to base64
+        PHOTO;VALUE=URL;TYPE=GIF:{employee_profile.profile_pic}
         TEL;TYPE=WORK,VOICE:{employee_profile.phone}
         TEL;TYPE=HOME,VOICE:{employee_profile.phone}
         ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
@@ -381,7 +380,7 @@ def download_vcard(request, user_id):
         N:{user_profile.last_name};{user_profile.first_name};;;
         FN:{user_profile.first_name} {user_profile.last_name}
         TITLE:{user_profile.position}
-        PHOTO;ENCODING=b;TYPE=GIF:{user_profile.profile_pic}  # Ensure this is in base64 format
+        PHOTO;VALUE=URL;TYPE=GIF:{user_profile.profile_pic}
         TEL;TYPE=WORK,VOICE:{user_profile.phone}
         TEL;TYPE=HOME,VOICE:{user_profile.phone}
         ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
@@ -399,7 +398,7 @@ def download_vcard(request, user_id):
         VERSION:3.0
         FN:{company.admin_name}
         ORG:{company.company_name}
-        PHOTO;ENCODING=b;TYPE=GIF:{company.company_logo}  # Ensure this is in base64 format
+        PHOTO;VALUE=URL;TYPE=GIF:{company.company_logo}
         TEL;TYPE=WORK,VOICE:{company.phone}
         TEL;TYPE=HOME,VOICE:{company.phone}
         ADR;TYPE=WORK,PREF:;;{company.address};;;;
@@ -417,6 +416,7 @@ def download_vcard(request, user_id):
     response = HttpResponse(vcard_data, content_type='text/vcard')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
 
 
 def build_query_params(meeting_details):
