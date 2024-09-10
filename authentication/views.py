@@ -44,7 +44,8 @@ class CustomGoogleLogin(View):
             if not email:
                 return JsonResponse({'error': 'Failed to retrieve email from token'}, status=400)
 
-            username = decoded_token.get('preferred_username', email)
+            email = decoded_token.get('email')
+            username = email.split('@')[0] if email else None
 
             # Check if user exists by email
             user = User.objects.filter(email=email).first()

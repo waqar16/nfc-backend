@@ -4,10 +4,10 @@ from .models import Company, Employee
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
     # Fields to display in the list view
-    list_display = ['company_name', 'admin_name', 'email', 'phone', 'website', 'receive_marketing_emails']
+    list_display = ['company_name', 'admin_name', 'email', 'username', 'phone', 'website', 'receive_marketing_emails']
     
     # Fields to enable searching
-    search_fields = ['company_name', 'admin_name', 'email', 'phone']
+    search_fields = ['company_name', 'admin_name', 'username', 'email', 'phone']
     
     # Fields to filter by in the sidebar
     list_filter = ['receive_marketing_emails']
@@ -18,10 +18,10 @@ class CompanyAdmin(admin.ModelAdmin):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     # Fields to display in the list view
-    list_display = ['first_name', 'last_name', 'email', 'position', 'company']
+    list_display = ['first_name', 'last_name', 'email', 'position', 'company', 'username']
     
     # Fields to enable searching
-    search_fields = ['first_name', 'last_name', 'email', 'position', 'company__company_name']
+    search_fields = ['first_name', 'last_name', 'email', 'position', 'company__company_name', 'username']
     
     # Fields to filter by in the sidebar
     list_filter = ['position', 'company']
@@ -32,7 +32,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     # Optionally, you can add fieldsets to customize the form layout in the admin panel
     fieldsets = (
         (None, {
-            'fields': ('first_name', 'last_name', 'email', 'position', 'company')
+            'fields': ('first_name', 'last_name', 'email', 'username', 'position', 'company')
         }),
         ('Contact Information', {
             'fields': ('phone', 'address', 'bio', 'facebook', 'instagram', 'website', 'linkedin', 'github', 'whatsapp'),

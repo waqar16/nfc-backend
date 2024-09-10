@@ -60,13 +60,13 @@ def user_profile_list(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticatedOrReadOnly])
-def user_profile_detail(request, pk):
+def user_profile_detail(request, username):
     try:
-        profile = UserProfile.objects.get(user=pk)
+        profile = UserProfile.objects.get(username=username)
     except UserProfile.DoesNotExist:
         # If UserProfile does not exist, try to fetch from Company model
         try:
-            company = Company.objects.get(user=pk)
+            company = Company.objects.get(username=username)
             # Serialize the Company data
             serializer = CompanySerializer(company)
             return Response(serializer.data)
@@ -110,7 +110,7 @@ def share_profile_url(request):
             profile = UserProfile.objects.get(user=user)
         except UserProfile.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
+        profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
     
     elif profile_type == 'employee':
         try:
@@ -124,7 +124,7 @@ def share_profile_url(request):
             profile = Company.objects.get(user=user)
         except Company.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
+        profile_url = f'https://letsconnect.onesec.shop/company/{user.username}'
     else:
         return Response({'detail': 'Invalid profile type.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -176,26 +176,34 @@ def share_profile(request):
         try:
             shared_to_user = User.objects.get(email=shared_to_email)
         except User.DoesNotExist:
-            # Send email with profile URL
-            if user.profile_type == 'company':
-                profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
-                sender_name = user.username
-            elif user.profile_type == 'employee':
-                profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
-                sender_name = f"{user.first_name} {user.last_name}"
-            else:
-                profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
-                sender_name = f"{user.first_name} {user.last_name}"
-            
-            subject = 'Profile Shared with You'
-            message = f'Hi there,\n\n{sender_name} has shared their profile with you. You can view the profile at the following URL:\n\n{profile_url}\n\nBest regards,\nOneSec Team'
-            from_email = EMAIL_HOST_USER
-            recipient_list = [shared_to_email]
-            
-            send_mail(subject, message, from_email, recipient_list)
-            
-            return Response({'message': 'User does not exist, but email sent successfully'}, status=status.HTTP_200_OK)
+
+            try:
+                # Send email with profile URL
+                if user.profile_type == 'company':
+                    profile_url = f'https://letsconnect.onesec.shop/company/{user.username}'
+                    sender_name = user.username
+                elif user.profile_type == 'employee':
+                    profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+                    sender_name = f"{user.first_name} {user.last_name}"
+                else:
+                    profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
+                    sender_name = f"{user.first_name} {user.last_name}"
+                
+                subject = 'Profile Shared with You'
+                message = f'Hi there,\n\n{sender_name} has shared their profile with you. You can view the profile at the following URL:\n\n{profile_url}\n\nBest regards,\nOneSec Team'
+                from_email = EMAIL_HOST_USER
+                recipient_list = [shared_to_email]
+                
+                send_mail(subject, message, from_email, recipient_list)
+                
+                return Response({'message': 'User does not exist, but email sent successfully'}, status=status.HTTP_200_OK)
         
+            except Exception as e:
+                # Log the error for debugging purposes
+                print("Error sending email:", str(e))
+                # Return a user-friendly message
+                return Response({'message': 'User does not exist, but email could not be sent'}, status=status.HTTP_200_OK)
+    
         # Create ShareProfile entry
         share_profile_data = {
             'user': user.id,
@@ -235,6 +243,7 @@ def share_profile(request):
             'user': shared_to_user.id,
             'shared_from': user.id,
             'shared_from_email': user_profile.email,
+            'shared_from_username': user_profile.username,
             'profile_type_who_shared': user.profile_type
         }
         received_profile_serializer = ReceivedprofileSerializer(data=received_profile_data)

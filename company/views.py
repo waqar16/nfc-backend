@@ -1,3 +1,4 @@
+import re
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -33,9 +34,9 @@ def company_profile_list(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([AllowAny])
-def company_detail(request, pk):
+def company_detail(request, username):
     try:
-        company = Company.objects.get(user=pk)
+        company = Company.objects.get(username=username)
     except Company.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -107,9 +108,16 @@ def complete_registration(request, token, email, first_name, last_name):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticatedOrReadOnly])
-def employee_detail(request, email):
+def employee_detail(request, identifier):
     try:
-        employee = Employee.objects.get(email=email)
+        # Check if the identifier is an email using regex
+        if re.match(r'[^@]+@[^@]+\.[^@]+', identifier):
+            # If it's an email, fetch employee by email
+            employee = Employee.objects.get(email=identifier)
+        else:
+            # Otherwise, fetch employee by username
+            employee = Employee.objects.get(username=identifier)
+    
     except Employee.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 

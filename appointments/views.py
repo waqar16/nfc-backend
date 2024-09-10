@@ -349,81 +349,18 @@ def get_meetings(request):
     return paginator.get_paginated_response(paginated_data)
 
 
-# def download_vcard(request, user_id):
-#     # Fetch the user
-#     user = get_object_or_404(User, id=user_id)
-
-#     # Handle Employee profile
-#     if user.profile_type == 'employee':
-#         employee_profile = get_object_or_404(Employee, email=user.email)
-#         vcard_data = f"""
-# BEGIN:VCARD
-# VERSION:3.0
-# N:{employee_profile.last_name};{employee_profile.first_name};;;
-# FN:{employee_profile.first_name} {employee_profile.last_name}
-# TITLE:{employee_profile.position}
-# PHOTO;VALUE=URL;TYPE=GIF:{employee_profile.profile_pic}
-# TEL;TYPE=WORK,VOICE:{employee_profile.phone}
-# TEL;TYPE=HOME,VOICE:{employee_profile.phone}
-# ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
-# ADR;TYPE=HOME:;;{employee_profile.address};;;;
-# EMAIL;TYPE=INTERNET:{employee_profile.email}
-# END:VCARD
-# """.strip()
-#         filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
-    
-#     # Handle UserProfile profile
-#     elif user.profile_type == 'individual':
-#         user_profile = get_object_or_404(UserProfile, email=user.email)
-#         vcard_data = f"""
-#         BEGIN:VCARD
-# VERSION:3.0
-# N:{user_profile.last_name};{user_profile.first_name};;;
-# FN:{user_profile.first_name} {user_profile.last_name}
-# TITLE:{user_profile.position}
-# PHOTO;VALUE=URL;TYPE=GIF:{user_profile.profile_pic}
-# TEL;TYPE=WORK,VOICE:{user_profile.phone}
-# TEL;TYPE=HOME,VOICE:{user_profile.phone}
-# ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
-# ADR;TYPE=HOME:;;{user_profile.address};;;;
-# EMAIL;TYPE=INTERNET:{user_profile.email}
-# END:VCARD
-# """.strip()
-#         filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
-    
-#     # Handle Company profile
-#     elif user.profile_type == 'company':
-#         company = get_object_or_404(Company, email=user.email)
-#         vcard_data = f"""
-# BEGIN:VCARD
-# VERSION:3.0
-# FN:{company.admin_name}
-# ORG:{company.company_name}
-# PHOTO;VALUE=URL;TYPE=GIF:{company.company_logo}
-# TEL;TYPE=WORK,VOICE:{company.phone}
-# TEL;TYPE=HOME,VOICE:{company.phone}
-# ADR;TYPE=WORK,PREF:;;{company.address};;;;
-# ADR;TYPE=HOME:;;{company.address};;;;
-# EMAIL;TYPE=INTERNET:{company.email}
-# END:VCARD
-# """.strip()
-#         filename = f"{company.admin_name}_contact.vcf"
-    
-#     # Handle invalid account type
-#     else:
-#         return HttpResponseForbidden("Invalid account type")
-
-#     # Prepare and return the vCard response
-#     response = HttpResponse(vcard_data, content_type='text/vcard')
-#     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-#     return response
-
 def download_vcard(request, user_id):
     user = get_object_or_404(User, id=user_id)
 
     def get_base64_image(url):
-        response = requests.get(url)
-        return base64.b64encode(response.content).decode('utf-8')
+        if not url:
+            return None  # Return None if no URL is provided
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error for invalid responses
+            return base64.b64encode(response.content).decode('utf-8')
+        except requests.exceptions.RequestException:
+            return None  # Handle invalid or inaccessible URLs gracefully
 
     if user.profile_type == 'employee':
         employee_profile = get_object_or_404(Employee, email=user.email)
@@ -434,14 +371,18 @@ VERSION:3.0
 N:{employee_profile.last_name};{employee_profile.first_name};;;
 FN:{employee_profile.first_name} {employee_profile.last_name}
 TITLE:{employee_profile.position}
-PHOTO;ENCODING=b;TYPE=JPEG:{profile_pic_base64}
 TEL;TYPE=WORK,VOICE:{employee_profile.phone}
 TEL;TYPE=HOME,VOICE:{employee_profile.phone}
 ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
 ADR;TYPE=HOME:;;{employee_profile.address};;;;
 EMAIL;TYPE=INTERNET:{employee_profile.email}
-END:VCARD
 """.strip()
+
+        # Only add the photo section if the profile picture is available
+        if profile_pic_base64:
+            vcard_data += f"\nPHOTO;ENCODING=b;TYPE=JPEG:{profile_pic_base64}"
+
+        vcard_data += "\nEND:VCARD"
         filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
 
     elif user.profile_type == 'individual':
@@ -453,14 +394,18 @@ VERSION:3.0
 N:{user_profile.last_name};{user_profile.first_name};;;
 FN:{user_profile.first_name} {user_profile.last_name}
 TITLE:{user_profile.position}
-PHOTO;ENCODING=b;TYPE=JPEG:{profile_pic_base64}
 TEL;TYPE=WORK,VOICE:{user_profile.phone}
 TEL;TYPE=HOME,VOICE:{user_profile.phone}
 ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
 ADR;TYPE=HOME:;;{user_profile.address};;;;
 EMAIL;TYPE=INTERNET:{user_profile.email}
-END:VCARD
 """.strip()
+
+        # Only add the photo section if the profile picture is available
+        if profile_pic_base64:
+            vcard_data += f"\nPHOTO;ENCODING=b;TYPE=JPEG:{profile_pic_base64}"
+
+        vcard_data += "\nEND:VCARD"
         filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
 
     elif user.profile_type == 'company':
@@ -471,22 +416,97 @@ BEGIN:VCARD
 VERSION:3.0
 FN:{company.admin_name}
 ORG:{company.company_name}
-PHOTO;ENCODING=b;TYPE=JPEG:{logo_base64}
 TEL;TYPE=WORK,VOICE:{company.phone}
 TEL;TYPE=HOME,VOICE:{company.phone}
 ADR;TYPE=WORK,PREF:;;{company.address};;;;
 ADR;TYPE=HOME:;;{company.address};;;;
 EMAIL;TYPE=INTERNET:{company.email}
-END:VCARD
 """.strip()
+
+        # Only add the logo section if the company logo is available
+        if logo_base64:
+            vcard_data += f"\nPHOTO;ENCODING=b;TYPE=JPEG:{logo_base64}"
+
+        vcard_data += "\nEND:VCARD"
         filename = f"{company.admin_name}_contact.vcf"
 
     else:
         return HttpResponseForbidden("Invalid account type")
 
+    # Send the vCard file as a response
     response = HttpResponse(vcard_data, content_type='text/vcard')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+# def download_vcard(request, user_id):
+#     user = get_object_or_404(User, id=user_id)
+
+#     def get_base64_image(url):
+#         response = requests.get(url)
+#         return base64.b64encode(response.content).decode('utf-8')
+
+#     if user.profile_type == 'employee':
+#         employee_profile = get_object_or_404(Employee, email=user.email)
+#         profile_pic_base64 = get_base64_image(employee_profile.profile_pic)
+#         vcard_data = f"""
+# BEGIN:VCARD
+# VERSION:3.0
+# N:{employee_profile.last_name};{employee_profile.first_name};;;
+# FN:{employee_profile.first_name} {employee_profile.last_name}
+# TITLE:{employee_profile.position}
+# PHOTO;ENCODING=b;TYPE=JPEG:{profile_pic_base64}
+# TEL;TYPE=WORK,VOICE:{employee_profile.phone}
+# TEL;TYPE=HOME,VOICE:{employee_profile.phone}
+# ADR;TYPE=WORK,PREF:;;{employee_profile.address};;;;
+# ADR;TYPE=HOME:;;{employee_profile.address};;;;
+# EMAIL;TYPE=INTERNET:{employee_profile.email}
+# END:VCARD
+# """.strip()
+#         filename = f"{employee_profile.first_name}_{employee_profile.last_name}_contact.vcf"
+
+#     elif user.profile_type == 'individual':
+#         user_profile = get_object_or_404(UserProfile, email=user.email)
+#         profile_pic_base64 = get_base64_image(user_profile.profile_pic)
+#         vcard_data = f"""
+# BEGIN:VCARD
+# VERSION:3.0
+# N:{user_profile.last_name};{user_profile.first_name};;;
+# FN:{user_profile.first_name} {user_profile.last_name}
+# TITLE:{user_profile.position}
+# PHOTO;ENCODING=b;TYPE=JPEG:{profile_pic_base64}
+# TEL;TYPE=WORK,VOICE:{user_profile.phone}
+# TEL;TYPE=HOME,VOICE:{user_profile.phone}
+# ADR;TYPE=WORK,PREF:;;{user_profile.address};;;;
+# ADR;TYPE=HOME:;;{user_profile.address};;;;
+# EMAIL;TYPE=INTERNET:{user_profile.email}
+# END:VCARD
+# """.strip()
+#         filename = f"{user_profile.first_name}_{user_profile.last_name}_contact.vcf"
+
+#     elif user.profile_type == 'company':
+#         company = get_object_or_404(Company, email=user.email)
+#         logo_base64 = get_base64_image(company.company_logo)
+#         vcard_data = f"""
+# BEGIN:VCARD
+# VERSION:3.0
+# FN:{company.admin_name}
+# ORG:{company.company_name}
+# PHOTO;ENCODING=b;TYPE=JPEG:{logo_base64}
+# TEL;TYPE=WORK,VOICE:{company.phone}
+# TEL;TYPE=HOME,VOICE:{company.phone}
+# ADR;TYPE=WORK,PREF:;;{company.address};;;;
+# ADR;TYPE=HOME:;;{company.address};;;;
+# EMAIL;TYPE=INTERNET:{company.email}
+# END:VCARD
+# """.strip()
+#         filename = f"{company.admin_name}_contact.vcf"
+
+#     else:
+#         return HttpResponseForbidden("Invalid account type")
+
+#     response = HttpResponse(vcard_data, content_type='text/vcard')
+#     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#     return response
 
 
 def build_query_params(meeting_details):

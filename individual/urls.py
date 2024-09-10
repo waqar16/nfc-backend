@@ -7,7 +7,7 @@ from . import views
 
 urlpatterns = [
     path('profiles/', views.user_profile_list, name='user_profile_list'),
-    path('profiles/<int:pk>/', views.user_profile_detail, name='user_profile_detail'),
+    path('profiles/<str:username>/', views.user_profile_detail, name='user_profile_detail'),
     # path('update-profile-pic/', views.update_profile_pic, name='update-profile-pic'),
     # path('nfc-write/', views.nfc_write, name='nfc_write'),
     # path('nfc-read/', views.nfc_read, name='nfc_read'),

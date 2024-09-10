@@ -9,6 +9,8 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
+    display_email = models.EmailField(blank=True, null=True)
+    username = models.CharField(max_length=50, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     position = models.CharField(max_length=255, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
@@ -39,6 +41,7 @@ class Receivedprofile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     shared_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_from')
     shared_from_email = models.EmailField(blank=True, null=True)
+    shared_from_username = models.CharField(max_length=50, blank=True, null=True)
     shared_at = models.DateTimeField(auto_now_add=True)
     profile_type_who_shared = models.CharField(max_length=50, choices=[('individual', 'Individual'), ('employee', 'Employee'), ('company', 'Company')])
 
