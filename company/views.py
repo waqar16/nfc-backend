@@ -71,6 +71,9 @@ def employee_list(request):
         if serializer.is_valid():
             company = Company.objects.filter(user=request.user).first()
             if company:
+                # Check if the email already exists in the User model
+                if User.objects.filter(email=serializer.validated_data['email']).exists():
+                    return Response({'error': ['This email is already registered.']}, status=status.HTTP_400_BAD_REQUEST)
                 employee = serializer.save(company=company)
                 registration_url = f'https://letsconnect.onesec.shop/complete-registration/{employee.registration_token}/{ employee.email}/{employee.first_name}/{employee.last_name}'
                 # registration_url = request.build_absolute_uri(reverse('complete-registration', args=[employee.registration_token, employee.email, employee.first_name, employee.last_name]))
@@ -156,10 +159,17 @@ def delete_employee_profile(request, email):
         
         employee_profile = Employee.objects.get(email=email)
         user.delete()
+
         employee_profile.delete()
         
         return Response({'detail': 'Profile deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except User.DoesNotExist:
-        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        # If the user does not exist, just delete the employee profile
+        try:
+            employee_profile = Employee.objects.get(email=email)
+            employee_profile.delete()
+            return Response({'detail': 'Profile deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        except Employee.DoesNotExist:
+            return Response({'detail': 'Employee profile not found'}, status=status.HTTP_404_NOT_FOUND)
     except Employee.DoesNotExist:
         return Response({'detail': 'Employee profile not found'}, status=status.HTTP_404_NOT_FOUND)

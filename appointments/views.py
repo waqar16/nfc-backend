@@ -33,6 +33,7 @@ def google_auth_request(request):
     start_datetime = request.GET.get('start_datetime')
     attendee_email = request.GET.get('attendee_email')
     user_id = request.GET.get('user_id')
+    username = request.GET.get('username')
 
     # Store the meeting details in the session
     request.session['meeting_details'] = {
@@ -40,7 +41,8 @@ def google_auth_request(request):
         'description': description,
         'start_datetime': start_datetime,
         'attendee_email': attendee_email,
-        'user_id': user_id
+        'user_id': user_id,
+        'username': username
     }
 
     # Check if user is already authenticated
@@ -212,6 +214,7 @@ def schedule_meeting(request):
         start_datetime = request.query_params.get('start_datetime')
         attendee_email = request.query_params.get('attendee_email')
         user_id = request.query_params.get('user_id') #attendee
+        username = request.query_params.get('username') #ateeendee
 
         # Ensure all required fields are present
         if not title:
@@ -275,9 +278,9 @@ def schedule_meeting(request):
                 meeting_status='pending'
             )
             if user.profile_type == 'individual':
-                return redirect(f'https://letsconnect.onesec.shop/profile/{user_id}?status=success')
+                return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=success')
             else:
-                return redirect(f'https://letsconnect.onesec.shop/company/{user_id}?status=success')
+                return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=success')
 
             # return redirect('https://calendar.google.com/calendar/u/0/r')
         
@@ -292,9 +295,9 @@ def schedule_meeting(request):
             # return Response(response.json(), status=response.status_code)
 
             if user.profile_type == 'individual':
-                return redirect(f'https://letsconnect.onesec.shop/profile/{user_id}?status=failure')
+                return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=failure')
             else:
-                return redirect(f'https://letsconnect.onesec.shop/company/{user_id}?status=failure')
+                return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=failure')
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
