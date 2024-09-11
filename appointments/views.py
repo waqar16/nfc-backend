@@ -278,9 +278,11 @@ def schedule_meeting(request):
                 meeting_status='pending'
             )
             if user.profile_type == 'individual':
-                return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=success')
+                # return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=success')
+                return redirect(f'https://letsconnect.onesec.shop/')
             else:
-                return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=success')
+                # return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=success')
+                return redirect(f'https://letsconnect.onesec.shop/')
 
             # return redirect('https://calendar.google.com/calendar/u/0/r')
         
@@ -295,9 +297,11 @@ def schedule_meeting(request):
             # return Response(response.json(), status=response.status_code)
 
             if user.profile_type == 'individual':
-                return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=failure')
+                # return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=failure')
+                return redirect('https://calendar.google.com/calendar/u/0/r')
             else:
-                return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=failure')
+                # return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=failure')
+                return redirect('https://calendar.google.com/calendar/u/0/r')
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
