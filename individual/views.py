@@ -117,7 +117,7 @@ def share_profile_url(request):
             profile = Employee.objects.get(user=user)
         except Employee.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+        profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
     
     elif profile_type == 'company':
         try:
@@ -183,7 +183,7 @@ def share_profile(request):
                     profile_url = f'https://letsconnect.onesec.shop/company/{user.username}'
                     sender_name = user.username
                 elif user.profile_type == 'employee':
-                    profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+                    profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
                     sender_name = f"{user.first_name} {user.last_name}"
                 else:
                     profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
@@ -211,15 +211,15 @@ def share_profile(request):
         }
 
         if user.profile_type == 'company':
-            profile_url = f'https://letsconnect.onesec.shop/company/{user.id}'
+            profile_url = f'https://letsconnect.onesec.shop/company/{user.username}'
             sent_to = shared_to_user.username
             sender_name = user.username
         elif user.profile_type == 'employee':
-            profile_url = f'https://letsconnect.onesec.shop/profile/{user.email}'
+            profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
             sent_to = f"{shared_to_user.first_name} {shared_to_user.last_name}"
             sender_name = f"{user.first_name} {user.last_name}"
         else:
-            profile_url = f'https://letsconnect.onesec.shop/profile/{user.id}'
+            profile_url = f'https://letsconnect.onesec.shop/profile/{user.username}'
             sent_to = f"{shared_to_user.first_name} {shared_to_user.last_name}"
             sender_name = f"{user.first_name} {user.last_name}"
         
