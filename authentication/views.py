@@ -130,18 +130,6 @@ class CustomTokenCreateView(TokenCreateView):
 
         return super().post(request, *args, **kwargs)
 
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def public_user_detail_view(request, pk):
-    
-#     # Retrieve the user or return a 404 if not found
-#     user = get_object_or_404(User, id=pk)
-    
-#     # Serialize the user data
-#     serializer = CustomUserSerializer(user)
-    
-#     # Return the serialized data
-#     return Response(serializer.data)
 
 
 class VerifyCodeView(APIView):
