@@ -115,10 +115,6 @@ SOCIALACCOUNT_PROVIDERS = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# If you want to allow specific origins, use this instead:
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000"
-# ]
 
 IPINFO_TOKEN = '4d0c535756e617'
 
