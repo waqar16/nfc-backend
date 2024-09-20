@@ -67,7 +67,6 @@ INSTALLED_APPS = [
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'schema_graph',
-
 ]
 
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -186,7 +185,7 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'authentication.serializers.CustomUserCreateSerializer',
         'user': 'authentication.serializers.CustomUserSerializer',
-        'current_user': 'authentication.serializers.CustomUserSerializer', 
+        'current_user': 'authentication.serializers.CustomUserSerializer',
     },
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}/',
     'SEND_ACTIVATION_EMAIL': True,

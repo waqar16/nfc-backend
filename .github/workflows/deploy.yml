@@ -30,7 +30,7 @@ jobs:
 
     - name: SSH into EC2 and deploy
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+        ssh -i ~/.ssh/id_rsa ubuntu@${{secrets.EC2_HOST}} << 'EOF'
         cd /home/ubuntu/nfc-backend
         
         # Stop and remove the existing container

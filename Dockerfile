@@ -25,6 +25,5 @@ EXPOSE 8000
 # Define environment variable
 ENV NAME=World
 
-# Run Gunicorn server
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "nfc_backend.wsgi:application"]
-
+# Run Gunicorn server with specified number of workers
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "9", "--timeout", "120", "nfc_backend.wsgi:application"]
