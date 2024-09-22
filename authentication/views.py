@@ -54,12 +54,7 @@ class CustomGoogleLogin(View):
 
             if user:
                 if user.has_usable_password():
-                    return JsonResponse({'error': 'Account already exists with this email. Please login with your email and password.'}, status=400)
-                
-                # Update user profile_type if needed
-                # if user.profile_type != profile_type:
-                #     user.profile_type = profile_type
-                #     user.save()
+                    return JsonResponse({"error": "It looks like your Google account isn't linked with an onesec account. Please try signing in with the same email and password you used to sign up manually."}, status=400)
             else:
                 # Create a new user if none exists
                 user = User.objects.create(username=username, email=email, first_name=first_name, last_name=last_name, profile_type=profile_type, authentication_type='google')
@@ -110,43 +105,43 @@ class CustomUserCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class CustomTokenCreateView(TokenCreateView):
-    def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
+# class CustomTokenCreateView(TokenCreateView):
+#     def post(self, request, *args, **kwargs):
+#         email = request.data.get('email')
+#         password = request.data.get('password')
 
-        if not email or not password:
-            return Response({"detail": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+#         if not email or not password:
+#             return Response({"detail": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Perform the login and token creation logic
-        from django.contrib.auth import authenticate
-        user = authenticate(username=email, password=password)
+#         # Perform the login and token creation logic
+#         from django.contrib.auth import authenticate
+#         user = authenticate(username=email, password=password)
 
-        if user is None:
-            return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+#         if user is None:
+#             return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not user.is_active:
-            return Response({"detail": "This account is inactive. Please contact support."}, status=status.HTTP_400_BAD_REQUEST)
+#         if not user.is_active:
+#             return Response({"detail": "This account is inactive. Please contact support."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return super().post(request, *args, **kwargs)
+#         return super().post(request, *args, **kwargs)
 
 
 
-class VerifyCodeView(APIView):
-    permission_classes = [AllowAny]
+# class VerifyCodeView(APIView):
+#     permission_classes = [AllowAny]
 
-    def post(self, request):
-        email = request.data.get('email')
-        verification_code = request.data.get('verification_code')
+#     def post(self, request):
+#         email = request.data.get('email')
+#         verification_code = request.data.get('verification_code')
 
-        try:
-            user = User.objects.get(email=email, verification_code=verification_code)
-            user.is_active = True
-            user.verification_code = None  # Clear the verification code
-            user.save()
-            return Response({"detail": "Account successfully verified."}, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({"detail": "Invalid verification code."}, status=status.HTTP_400_BAD_REQUEST)
+#         try:
+#             user = User.objects.get(email=email, verification_code=verification_code)
+#             user.is_active = True
+#             user.verification_code = None  # Clear the verification code
+#             user.save()
+#             return Response({"detail": "Account successfully verified."}, status=status.HTTP_200_OK)
+#         except User.DoesNotExist:
+#             return Response({"detail": "Invalid verification code."}, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenCreateView(APIView):
     def post(self, request, *args, **kwargs):
@@ -159,17 +154,19 @@ class CustomTokenCreateView(APIView):
         # Perform the login and token creation logic
         try:
             user = User.objects.get(email=email)
+            if not user.has_usable_password():
+                return Response({"detail": "This account use Google Sign-in."}, status=status.HTTP_401_UNAUTHORIZED)
             if not user.check_password(password):
-                return Response({"detail": "Invalid password."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({"detail": "Invalid credentials. Either email or password is incorrect."}, status=status.HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
-            return Response({"detail": "Invalid email."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Invalid credentials. Either email or password is incorrect."}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_active:
             response = send_activation_email(user.email)
             if response.status_code == status.HTTP_204_NO_CONTENT:
-                return Response({"detail": "Account is not active. Please check your email to activate."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Account is not in active state. We have sent an email to activate your account."}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({"detail": "Account is not active. Failed to send activation email."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"detail": "Account is not in active state and we are unable to send an email to activate your account. Please contact support."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Generate or retrieve the token for the user
         token, created = Token.objects.get_or_create(user=user)

@@ -13,6 +13,40 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn=config('SENTRY_DSN'),
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=0.1,
+    profiles_sample_rate=0.1,
+    send_default_pii=True,
+    environment="production",
+    release="onesec@1.0.0",
+)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'sentry': {
+            'level': 'ERROR',  # Send errors and above to Sentry
+            'class': 'sentry_sdk.integrations.logging.EventHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'sentry'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
