@@ -10,6 +10,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     github = serializers.URLField(required=False, allow_null=True)
     whatsapp = serializers.IntegerField(required=False, allow_null=True)
     profile_pic = serializers.URLField(required=False, allow_null=True)
+    display_email = serializers.EmailField(required=False, allow_null=True)
 
     class Meta:
         model = UserProfile

@@ -15,7 +15,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from djoser.views import TokenCreateView
-
+from individual.models import UserProfile
+from company.models import Company, Employee
 User = get_user_model()
 
 
@@ -60,6 +61,13 @@ class CustomGoogleLogin(View):
                 user = User.objects.create(username=username, email=email, first_name=first_name, last_name=last_name, profile_type=profile_type, authentication_type='google')
                 user.set_unusable_password()
                 user.save()
+                
+                if profile_type == 'individual':
+                    user_profile = UserProfile.objects.create(user=user, profile_pic=picture, first_name=first_name, last_name=last_name, email=email, username=username)
+                    user_profile.save()
+                elif profile_type == 'company':
+                    company_profile = Company.objects.create(user=user, admin_name=name, email=email, username=username)
+                    company_profile.save()
 
             # Generate or retrieve auth token
             token, created = Token.objects.get_or_create(user=user)
@@ -88,7 +96,7 @@ class DeleteGoogleAccountView(APIView):
 
     def delete(self, request):
         user = request.user
-        
+
         if user.authentication_type != 'google':
             return JsonResponse({'error': 'Invalid request'}, status=400)
 

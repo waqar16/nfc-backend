@@ -290,13 +290,14 @@ def share_back_profile(request):
         'https://www.googleapis.com/oauth2/v3/userinfo',
         headers={'Authorization': f'Bearer {access_token}'}
     )
-    
+
     if google_user_info.status_code == 200:
         google_user_info = google_user_info.json()
         email = google_user_info.get('email')
         name = google_user_info.get('name')
         first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
         picture = google_user_info.get('picture')
+        username = email.split('@')[0] if email else None
 
         if not email:
             return Response({'error': 'Failed to retrieve email from token'}, status=status.HTTP_400_BAD_REQUEST)
@@ -306,7 +307,7 @@ def share_back_profile(request):
 
         if user:
             if user.has_usable_password():
-                return Response({'error': 'Email already exist. You need to login with your password.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': "Your account does not use Google Sign-in. Don't worry login with email and password"}, status=status.HTTP_400_BAD_REQUEST)
             # else:
             #     # Update user profile_type if needed
             #     if user.profile_type != profile_type:
@@ -315,7 +316,7 @@ def share_back_profile(request):
         else:
             # Create a new user if none exists
             user = User.objects.create(
-                username=email,  # or use some other unique identifier for the username
+                username=username,  # or use some other unique identifier for the username
                 email=email,
                 first_name=first_name,
                 last_name=last_name,
@@ -324,12 +325,15 @@ def share_back_profile(request):
             )
             user.set_unusable_password()
             user.save()
+            
+            user_profile = UserProfile.objects.create(user=user, profile_pic=picture, first_name=first_name, last_name=last_name, email=email, username=username)
+            user_profile.save()
 
         # Generate or retrieve auth token
         token, created = Token.objects.get_or_create(user=user)
 
         return JsonResponse({
-            'message': 'Login successful',
+            'message': 'Login successful',  
             'user_id': user.id,
             'username': user.username,
             'auth_token': token.key,

@@ -214,7 +214,7 @@ def schedule_meeting(request):
         start_datetime = request.query_params.get('start_datetime')
         attendee_email = request.query_params.get('attendee_email')
         user_id = request.query_params.get('user_id') #attendee
-        username = request.query_params.get('username') #ateeendee
+        username = request.query_params.get('username') #ateendee
 
         # Ensure all required fields are present
         if not title:
@@ -279,10 +279,10 @@ def schedule_meeting(request):
             )
             if user.profile_type == 'individual':
                 # return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=success')
-                return redirect(f'https://letsconnect.onesec.shop/')
+                return redirect(f'https://letsconnect.onesec.shop/manage-appointments/{host.id}/{host.username}')
             else:
                 # return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=success')
-                return redirect(f'https://letsconnect.onesec.shop/')
+                return redirect(f'https://letsconnect.onesec.shop/?status=failed')
 
             # return redirect('https://calendar.google.com/calendar/u/0/r')
         
