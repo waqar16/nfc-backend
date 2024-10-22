@@ -1,5 +1,6 @@
 import datetime
 import base64
+from django.utils import timezone
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework.response import Response
@@ -278,11 +279,10 @@ def schedule_meeting(request):
                 meeting_status='pending'
             )
             if user.profile_type == 'individual':
-                # return redirect(f'https://letsconnect.onesec.shop/profile/{username}?status=success')
                 return redirect(f'https://letsconnect.onesec.shop/manage-appointments/{host.id}/{host.username}')
             else:
                 # return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=success')
-                return redirect(f'https://letsconnect.onesec.shop/?status=failed')
+                return redirect('https://letsconnect.onesec.shop/?status=failed')
 
             # return redirect('https://calendar.google.com/calendar/u/0/r')
         
@@ -310,6 +310,7 @@ def schedule_meeting(request):
 @permission_classes([IsAuthenticated])
 def get_meetings(request):
     user = request.user
+    current_time = timezone.now()
 
     # Appointments where the authenticated user is the host
     host_appointments = Appointment.objects.filter(host=user)
@@ -322,6 +323,9 @@ def get_meetings(request):
 
     # Process host appointments
     for appointment in host_appointments:
+        if appointment.datetime < current_time:
+            appointment.meeting_status = 'Completed'
+            appointment.save()  # Save the updated status
         appointments_dict[appointment.id] = {
             'title': appointment.title,
             'description': appointment.description,
@@ -334,6 +338,9 @@ def get_meetings(request):
     # Process attendee appointments
     for appointment in attendee_appointments:
         # If the appointment is already in the dictionary, update the type if needed
+        if appointment.datetime < current_time:
+            appointment.meeting_status = 'Completed'
+            appointment.save()  # Save the updated status
         if appointment.id in appointments_dict:
             appointments_dict[appointment.id]['type'] = 'host & attendee'
         else:

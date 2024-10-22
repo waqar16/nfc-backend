@@ -14,7 +14,7 @@ class Appointment(models.Model):
     description = models.TextField()
     datetime = models.DateTimeField()
     google_event_id = models.CharField(max_length=255)
-    meeting_status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('completed', 'Completed')])
+    meeting_status = models.CharField(max_length=50, choices=[('scheduled', 'Scheduled'), ('completed', 'Completed')])
 
     def __str__(self):
         return f"Appointment with {self.attendee_email} by {self.host_email} on {self.datetime}"
