@@ -22,13 +22,20 @@ def company_profile_list(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        user = request.user
+        admin_name = request.data.get('admin_name', None)
+  
+        if admin_name:
+            user.admin_name = admin_name
+            user.save()
+
         serializer = CompanySerializer(data=request.data)
         print(request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
             print(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        print(serializer.errors) 
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -47,6 +54,13 @@ def company_detail(request, username):
 
     elif request.method == 'PUT':
         serializer = CompanySerializer(company, data=request.data)
+        user = request.user
+        admin_name = request.data.get('admin_name', None)
+
+        if admin_name:
+            user.admin_name = admin_name
+            user.save()
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

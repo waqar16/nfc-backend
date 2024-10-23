@@ -18,7 +18,7 @@ from rest_framework.pagination import PageNumberPagination
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 4
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -39,11 +39,19 @@ def user_profile_list(request):
 
     elif request.method == 'POST':
         print(request.data)
+        first_name = request.data.get('first_name', None)
+        last_name = request.data.get('last_name', None)
 
         serializer = UserProfileSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save(user=request.user)
+            user = request.user
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+            user.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -84,10 +92,19 @@ def user_profile_detail(request, username):
 
     elif request.method == 'PUT':
         serializer = UserProfileSerializer(profile, data=request.data)
+        
+        first_name = request.data.get('first_name', None)
+        last_name = request.data.get('last_name', None)
         if serializer.is_valid():
             serializer.save()
+            user = request.user
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+            user.save()
+    
             return Response(serializer.data)
-        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
