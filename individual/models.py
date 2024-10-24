@@ -44,6 +44,12 @@ class Receivedprofile(models.Model):
     shared_from_username = models.CharField(max_length=50, blank=True, null=True)
     shared_at = models.DateTimeField(auto_now_add=True)
     profile_type_who_shared = models.CharField(max_length=50, choices=[('individual', 'Individual'), ('employee', 'Employee'), ('company', 'Company')])
+    shared_from_company_logo = models.URLField(blank=True, null=True)
+    shared_from_profile_pic = models.URLField(blank=True, null=True)
+    shared_from_first_name = models.CharField(max_length=255, blank=True, null=True)
+    shared_from_last_name = models.CharField(max_length=255, blank=True, null=True)
+    shared_from_position = models.CharField(max_length=255, blank=True, null=True)
+    shared_from_company_name = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} received profile from {self.shared_from}"
