@@ -66,7 +66,7 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = F
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 

@@ -121,15 +121,6 @@ def schedule_meeting(request):
         request.session.pop('google_credentials', None)
         return redirect(f'/api/schedule-meeting/{query_params}')
     
-    # payload = {
-    #     'access_token2': credentials_data['access_token'],
-    #     'profile_type': 'individual',
-    # }
-
-    # # Make the POST request to your custom Google login endpoint
-    # custom_google_login_url = 'https://localhost:8000/auth/custom-google-login/'
-    # google_response = requests.post(custom_google_login_url, json=payload, verify=False)
-
     google_user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers={'Authorization': f'Bearer {credentials_data["access_token"]}'})
 
     if google_user_info.status_code == 200:
@@ -140,53 +131,23 @@ def schedule_meeting(request):
         name = google_user_info.get('name')
         first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
         # picture = google_user_info.get('picture')
-        host_object, created = User.objects.get_or_create(email=email, defaults={'first_name': first_name, 'last_name': last_name})
+        host_object, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'profile_type': "individual",
+                'authentication_type': 'google',
+            }
+        )
+        if created:
+            # Set the password to unusable if the user was just created
+            host_object.set_unusable_password()
+            host_object.save()
         host = host_object.id
         # host = google_response.json().get('user_id')
         # return Response(google_response.json())
     else:
         print(f"Custom Google login failed with status code {google_user_info.status_code}")
         # return Response(google_response.json())
-
-    # # Extract the access token from credentials_data
-    # access_token = credentials_data['access_token']
-
-    # # Exchange the access token for an ID token
-    # token_uri = 'https://oauth2.googleapis.com/token'
-    # data = {
-    #     'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
-    #     'subject_token_type': 'urn:ietf:params:oauth:token-type:access_token',
-    #     'subject_token': access_token,
-    #     'requested_token_type': 'urn:ietf:params:oauth:token-type:id_token'
-    # }
-    # response = requests.get(token_uri, data=data)
-
-    # if response.status_code == 200:
-    #     id_token = response.json().get('id_token')
-    #     if not id_token:
-    #         print("Failed to retrieve ID token")
-    #         return Response({'error': 'Failed to retrieve ID token'}, status=400)
-
-    #     # Prepare the payload
-    #     payload = {
-    #         'id_token': id_token,
-    #         'profile_type': 'individual',
-    #     }
-
-    #     # Make the POST request to your custom Google login endpoint
-    #     custom_google_login_url = 'https://localhost:8000/auth/custom-google-login/'
-    #     google_response = requests.post(custom_google_login_url, json=payload)
-
-    #     if google_response.status_code == 200:
-    #         print("Custom Google login successful")
-    #         host = google_response.json().get('user_id')
-    #         return Response(google_response.json())
-    #     else:
-    #         print(f"Custom Google login failed with status code {google_response.status_code}")
-    #         return Response(google_response.json())
-    # else:
-    #     print(f"Failed to exchange access token with status code {response.status_code}")
-    #     # return Response(response.json())
 
     try:
         credentials = Credentials(
@@ -203,12 +164,6 @@ def schedule_meeting(request):
 
         print(credentials_data)
         print("Request Data:", request.data)
-
-        # payload = {
-        #     'access_token': credentials_data['access_token'],
-        #     'profile_type': 'individual',
-        # }
-        # response = requests.post('https://127.0.0.1:8000/auth/custom-google-login/', json=payload, verify=False)
 
         title = request.query_params.get('title')
         description = request.query_params.get('description')
@@ -263,8 +218,6 @@ def schedule_meeting(request):
             json=event
         )
         if response.status_code == 200:
-            # return Response(response.json())
-            # Fetch the user instance
             user = get_object_or_404(User, id=user_id)
             host = get_object_or_404(User, id=host)
             Appointment.objects.create(

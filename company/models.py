@@ -22,6 +22,12 @@ class Company(models.Model):
 
     def __str__(self):
         return self.company_name
+ 
+    def delete(self, *args, **kwargs):
+        # Delete associated user when the company is deleted
+        if self.user:
+            self.user.delete()
+        super().delete(*args, **kwargs)
 
 
 class Employee(models.Model):
@@ -53,4 +59,3 @@ class Employee(models.Model):
         if self.user:
             self.user.delete()
         super().delete(*args, **kwargs)
-
