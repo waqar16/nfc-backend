@@ -262,12 +262,6 @@ def share_profile(request):
             'shared_from_email': user_profile.email,
             'shared_from_username': user_profile.username,
             'profile_type_who_shared': user.profile_type,
-            'shared_from_company_logo': user_profile.company_logo if user_profile else None,
-            'shared_from_profile_pic': user_profile.profile_pic if user_profile else None,
-            'shared_from_first_name': user_profile.first_name if user_profile else None,
-            'shared_from_last_name': user_profile.last_name if user_profile else None,
-            'shared_from_position': user_profile.position if user_profile else None,
-            'shared_from_company_name': user_profile.company_name if user_profile else None
         }
         received_profile_serializer = ReceivedprofileSerializer(data=received_profile_data)
         if received_profile_serializer.is_valid():
