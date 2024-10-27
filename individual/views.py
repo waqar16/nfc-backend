@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .models import UserProfile, Receivedprofile
 from company.models import Company
 from company.models import Employee
+from company.serializers import EmployeeSerializer
 from rest_framework.authtoken.models import Token
 from .serializers import UserProfileSerializer, ShareProfileSerializer, ReceivedprofileSerializer
 # from .utils import encrypt_data, decrypt_data
@@ -80,7 +81,14 @@ def user_profile_detail(request, username):
             return Response(serializer.data)
     
         except Company.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            # If neither UserProfile nor Company found, try fetching from Employee
+            try:
+                employee = Employee.objects.get(username=username)
+                serializer = EmployeeSerializer(employee)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                # Return 404 if no record found in any of the models
+                return Response({"detail": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
     # Ensure only the owner can update or delete
     if request.method in ['PUT', 'DELETE'] and profile.user != request.user:
