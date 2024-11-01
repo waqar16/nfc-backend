@@ -130,10 +130,14 @@ def schedule_meeting(request):
         email = google_user_info.get('email')
         name = google_user_info.get('name')
         first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
-        # picture = google_user_info.get('picture')
+        picture = google_user_info.get('picture')
         host_object, created = User.objects.get_or_create(
             email=email,
             defaults={
+                'first_name': first_name,
+                'last_name': last_name,
+                'username': email.split('@')[0],
+                'profile_pic': picture,
                 'profile_type': "individual",
                 'authentication_type': 'google',
             }
