@@ -100,11 +100,9 @@ def google_auth_callback(request):
         'expires_in': credentials.expiry.timestamp(),
         'id_token': id_token,
     }
+    
     # Retrieve meeting details from the session
     meeting_details = request.session.get('meeting_details')
-
-    # if not meeting_details:
-    #     return redirect('https://letsconnect.onesec.shop/schedule-meeting')
 
     # Construct the query parameters from the session data
     query_params = build_query_params(meeting_details)
@@ -130,14 +128,12 @@ def schedule_meeting(request):
         email = google_user_info.get('email')
         name = google_user_info.get('name')
         first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
-        picture = google_user_info.get('picture')
         host_object, created = User.objects.get_or_create(
             email=email,
             defaults={
                 'first_name': first_name,
                 'last_name': last_name,
                 'username': email.split('@')[0],
-                'profile_pic': picture,
                 'profile_type': "individual",
                 'authentication_type': 'google',
             }
@@ -147,11 +143,9 @@ def schedule_meeting(request):
             host_object.set_unusable_password()
             host_object.save()
         host = host_object.id
-        # host = google_response.json().get('user_id')
-        # return Response(google_response.json())
+        
     else:
         print(f"Custom Google login failed with status code {google_user_info.status_code}")
-        # return Response(google_response.json())
 
     try:
         credentials = Credentials(
