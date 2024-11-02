@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from django.conf import settings
+from rest_framework.authtoken.models import Token
 import requests
 from rest_framework.decorators import api_view
 from google.auth.transport.requests import Request
@@ -45,6 +46,8 @@ def google_auth_request(request):
         'user_id': user_id,
         'username': username
     }
+    
+    print("Session Data:", request.session['meeting_details'])
 
     # Check if user is already authenticated
     if 'google_credentials' in request.session:
@@ -115,6 +118,7 @@ def schedule_meeting(request):
     credentials_data = request.session.get('google_credentials')
     if not credentials_data:
         meeting_details = request.session.get('meeting_details')
+        print(meeting_details)
         query_params = build_query_params(meeting_details)
         request.session.pop('google_credentials', None)
         return redirect(f'/api/schedule-meeting/{query_params}')
@@ -160,15 +164,11 @@ def schedule_meeting(request):
         if credentials.expired:
             credentials.refresh(Request())
 
-        print(credentials_data)
-        print("Request Data:", request.data)
-
         title = request.query_params.get('title')
         description = request.query_params.get('description')
         start_datetime = request.query_params.get('start_datetime')
         attendee_email = request.query_params.get('attendee_email')
         user_id = request.query_params.get('user_id') #attendee
-        username = request.query_params.get('username') #ateendee
 
         # Ensure all required fields are present
         if not title:
@@ -229,17 +229,10 @@ def schedule_meeting(request):
                 google_event_id=response.json()['id'],
                 meeting_status='pending'
             )
-            if user.profile_type == 'individual':
-                return redirect(f'https://letsconnect.onesec.shop/manage-appointments/{host.id}/{host.username}')
-            else:
-                # return redirect(f'https://letsconnect.onesec.shop/company/{username}?status=success')
-                return redirect('https://letsconnect.onesec.shop/?status=failed')
+            token, created = Token.objects.get_or_create(user=host)
+            return redirect(f'https://letsconnect.onesec.shop/manage-appointments/{host.id}/{host.username}?status=success&token={token.key}')
 
-            # return redirect('https://calendar.google.com/calendar/u/0/r')
-        
         elif response.status_code == 401:
-            # If the token is invalid, reauthorize the user
-            # Retrieve meeting details from the session
             meeting_details = request.session.get('meeting_details')
             query_params = build_query_params(meeting_details)
             request.session.pop('google_credentials', None)
