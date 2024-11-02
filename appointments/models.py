@@ -18,7 +18,7 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"Appointment with {self.attendee_email} by {self.host_email} on {self.datetime}"
-    
+
     def update_status(self):
         # Ensure that datetime is a datetime object
         if isinstance(self.datetime, str):

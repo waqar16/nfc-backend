@@ -132,12 +132,14 @@ def schedule_meeting(request):
         email = google_user_info.get('email')
         name = google_user_info.get('name')
         first_name, last_name = name.split(' ', 1) if ' ' in name else (name, '')
+        username = email.split('@')[0]
+        profile_pic = google_user_info.get('picture')
         host_object, created = User.objects.get_or_create(
             email=email,
             defaults={
                 'first_name': first_name,
                 'last_name': last_name,
-                'username': email.split('@')[0],
+                'username': username,
                 'profile_type': "individual",
                 'authentication_type': 'google',
             }
@@ -146,6 +148,15 @@ def schedule_meeting(request):
             # Set the password to unusable if the user was just created
             host_object.set_unusable_password()
             host_object.save()
+            host_profile = UserProfile.objects.create(
+                user=host_object,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                username=email.split('@')[0],
+                profile_pic=profile_pic
+                )
+            host_profile.save()
         host = host_object.id
         
     else:
